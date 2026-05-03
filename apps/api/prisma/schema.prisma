@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActionStatus {
+  TODO
+  DOING
+  DONE
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  name        String                          
+  email       String   @unique
+  password    String
+  avatar      String?
+  createdAt   DateTime @default(now())
+
+  memberships   WorkspaceMember[]
+  goals         Goal[]           @relation("UserGoals")
+  actionItems   ActionItem[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  goalUpdates   GoalUpdate[]                  
+  announcements Announcement[]                
+  comments      Comment[]                     
+  reactions     Reaction[]                    
+}
+
+model Workspace {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  accentColor  String?
+  createdAt    DateTime @default(now())
+
+  members       WorkspaceMember[]
+  goals         Goal[]
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+}
+
+model WorkspaceMember {
+  id        Int @id @default(autoincrement())
+
+  userId      Int
+  workspaceId Int
+
+  role        String
+
+  //  ADD THESE PERMISSIONS
+  canCreateGoals          Boolean @default(false)
+  canPostAnnouncements    Boolean @default(false)
+  canInviteMembers        Boolean @default(false)
+  canManageActionItems    Boolean @default(false)
+
+  user        User       @relation(fields: [userId], references: [id])
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
+model Goal {
+  id          Int        @id @default(autoincrement())
+  title       String
+  dueDate     DateTime?
+  status      GoalStatus @default(NOT_STARTED)
+  createdAt   DateTime   @default(now())     
+
+  ownerId     Int
+  workspaceId Int
+
+  owner       User      @relation("UserGoals", fields: [ownerId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  milestones  Milestone[]
+  actionItems ActionItem[]
+  updates     GoalUpdate[]                   
+}
+
+// ✅ NEW — activity feed posts on a goal
+model GoalUpdate {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+
+  goalId    Int
+  authorId  Int
+
+  goal      Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  author    User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Milestone {
+  id        Int    @id @default(autoincrement())
+  title     String
+  progress  Int    @default(0)
+
+  goalId    Int
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+}
+
+model ActionItem {
+  id          Int          @id @default(autoincrement())
+  title       String                          
+  priority    Priority
+  dueDate     DateTime?
+  status      ActionStatus @default(TODO)
+  createdAt   DateTime     @default(now())    
+
+
+  goalId      Int
+  assigneeId  Int
+
+  goal     Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  assignee User @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  content     String
+  pinned      Boolean  @default(false)
+  createdAt   DateTime @default(now())        
+
+
+  workspaceId Int
+  authorId    Int                             
+
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)  
+
+  reactions   Reaction[]                      
+
+  comments    Comment[]                       
+
+}
+
+//  NEW — emoji reactions on announcements
+model Reaction {
+  id             Int    @id @default(autoincrement())
+  emoji          String
+
+  announcementId Int
+  userId         Int
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId, emoji])   // one emoji type per user per post
+}
+
+//  NEW — comments on announcements
+model Comment {
+  id             Int      @id @default(autoincrement())
+  content        String
+  createdAt      DateTime @default(now())
+
+  announcementId Int
+  authorId       Int
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  author       User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String
+  message   String?                           
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())          
+
+  userId    Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  action      String
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  workspaceId Int
+  userId      Int
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

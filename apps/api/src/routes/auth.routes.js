@@ -67,7 +67,13 @@ const setTokenCookies = (res, accessToken, refreshToken) => {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const user = await authService.register(req.body)
+    const { name, email, password } = req.body
+
+    const user = await authService.register({
+      name,
+      email,
+      password
+    })
     const { accessToken, refreshToken } = generateTokens(user)
     setTokenCookies(res, accessToken, refreshToken)
     res.status(201).json({ success: true, data: user })

@@ -2,8 +2,18 @@ const  prisma  = require('../lib/prisma')
 const bcrypt = require('bcryptjs')
 
 const register = async ({ name, email, password }) => {
+  console.log("REGISTER SERVICE HIT", { name, email, password })
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+
+  if (!passwordRegex.test(password)) {
+    throw new Error(
+      'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'
+    )
+  }
   const existing = await prisma.user.findUnique({ where: { email } })
-  if (existing) throw new Error('Email already in use')
+  if (existing) throw new Error('Email already exists')
 
   const hashed = await bcrypt.hash(password, 10)
 
@@ -11,6 +21,7 @@ const register = async ({ name, email, password }) => {
     data: { name, email, password: hashed },
     select: { id: true, name: true, email: true, avatar: true, createdAt: true }
   })
+  
 }
 
 const findByEmail = async (email) => {

@@ -1,6 +1,4 @@
-// middleware/role.middleware.js
-const { getMemberRole } = require('../services/workspace.service')
-const { requireRole, requirePermission } = require('./role.middleware')
+
 // middleware/role.middleware.js
 
 const prisma = require('../lib/prisma')

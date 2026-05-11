@@ -111,7 +111,7 @@ team-hub/
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/yourusername/team-hub.git
+git clone https://github.com/pial36/team-hub.git
 cd team-hub
 ```
 
@@ -122,8 +122,7 @@ npm install
 
 ### 3. Set up environment variables
 
-**apps/api/.env**
-```env
+
 DATABASE_URL=postgresql://postgres:password@localhost:5432/teamhub
 JWT_ACCESS_SECRET=your_access_secret_here
 JWT_REFRESH_SECRET=your_refresh_secret_here
@@ -136,8 +135,7 @@ EMAIL_PASS=your-gmail-app-password
 NODE_ENV=development
 ```
 
-**apps/web/.env.local**
-```env
+**local
 NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 ```

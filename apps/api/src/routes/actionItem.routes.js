@@ -2,6 +2,7 @@ const router = require('express').Router()
 const { protect } = require('../middleware/auth.middleware')
 const { requireRole } = require('../middleware/role.middleware')
 const actionItemService = require('../services/actionItem.service')
+const { log } = require('../services/auditLog.service')
 
 // GET /api/action-items/workspace/:workspaceId
 router.get('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (req, res) => {
@@ -44,12 +45,12 @@ router.put('/:id', protect, async (req, res) => {
       req.body
     )
 
-  await log({
-     workspaceId: parseInt(req.params.workspaceId),
-     userId: req.user.id,
-     action: 'ACTION_ITEM_UPDATED',
-     metadata: { actionItemId: parseInt(req.params.id) }
-})
+    await log({
+      workspaceId: item.workspaceId,
+      userId: req.user.id,
+      action: 'ACTION_ITEM_UPDATED',
+      metadata: { actionItemId: parseInt(req.params.id) }
+    })
 
     res.json({ success: true, data: item })
   } catch (err) {

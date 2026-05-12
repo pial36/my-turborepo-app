@@ -53,6 +53,17 @@ const updateGoal = async (goalId, data) => {
   })
 }
 
+const updateGoalStatus = async ({ id, status }) => {
+  return prisma.goal.update({
+    where: { id },
+    data: { status },
+    include: {
+      owner: { select: { id: true, name: true, avatar: true } },
+      milestones: true,
+    }
+  })
+}
+
 const deleteGoal = async (goalId) => {
   return prisma.goal.delete({ where: { id: goalId } })
 }
@@ -96,6 +107,7 @@ module.exports = {
   getGoalById,
   getAllGoals,
   updateGoal,
+  updateGoalStatus,
   deleteGoal,
   createGoalUpdate,
   createMilestone,

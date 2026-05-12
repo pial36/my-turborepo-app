@@ -50,7 +50,20 @@ const updateWorkspace = async (workspaceId, data) => {
 }
 
 const deleteWorkspace = async (workspaceId) => {
-  return prisma.workspace.delete({ where: { id: workspaceId } })
+  return prisma.$transaction(async (tx) => {
+    // Delete all related records first (cascade manually due to FK constraints)
+    await tx.workspaceMember.deleteMany({ where: { workspaceId } })
+    await tx.auditLog.deleteMany({ where: { workspaceId } })
+    await tx.reaction.deleteMany({ where: { announcement: { workspaceId } } })
+    await tx.comment.deleteMany({ where: { announcement: { workspaceId } } })
+    await tx.announcement.deleteMany({ where: { workspaceId } })
+    await tx.actionItem.deleteMany({ where: { workspaceId } })
+    await tx.milestone.deleteMany({ where: { goal: { workspaceId } } })
+    await tx.goalUpdate.deleteMany({ where: { goal: { workspaceId } } })
+    await tx.goal.deleteMany({ where: { workspaceId } })
+    // Finally delete the workspace
+    return tx.workspace.delete({ where: { id: workspaceId } })
+  })
 }
 
 // invite by email — finds user then adds them
@@ -78,6 +91,18 @@ const updateMemberRole = async ({ workspaceId, userId, role }) => {
   })
 }
 
+const updateMemberPermissions = async ({ workspaceId, userId, permissions }) => {
+  return prisma.workspaceMember.update({
+    where: { userId_workspaceId: { userId, workspaceId } },
+    data: {
+      canCreateGoals: permissions.canCreateGoals ?? undefined,
+      canPostAnnouncements: permissions.canPostAnnouncements ?? undefined,
+      canInviteMembers: permissions.canInviteMembers ?? undefined,
+      canManageActionItems: permissions.canManageActionItems ?? undefined,
+    }
+  })
+}
+
 const removeMember = async ({ workspaceId, userId }) => {
   return prisma.workspaceMember.delete({
     where: { userId_workspaceId: { userId, workspaceId } }
@@ -98,7 +123,6 @@ module.exports = {
   updateWorkspace,
   deleteWorkspace,
   inviteMember,
-  updateMemberRole,
-  removeMember,
+  updateMemberRole,  updateMemberPermissions,  removeMember,
   getMemberRole
 }

@@ -100,16 +100,20 @@ router.post(
       // 2. Get workspace info
       const workspace = await workspaceService.getWorkspaceById(workspaceId)
 
-      // 3. Send email
-      await sendMail({
-        to: req.body.email,
-        subject: `You've been invited to ${workspace.name}`,
-        html: inviteTemplate({
-          inviterName: req.user.name || 'Team Member',
-          workspaceName: workspace.name,
-          loginUrl: `${process.env.CLIENT_URL}/login`
+      // 3. Send email (non-blocking — don't fail invite if email is down)
+      try {
+        await sendMail({
+          to: req.body.email,
+          subject: `You've been invited to ${workspace.name}`,
+          html: inviteTemplate({
+            inviterName: req.user.name || 'Team Member',
+            workspaceName: workspace.name,
+            loginUrl: `${process.env.CLIENT_URL}/login`
+          })
         })
-      })
+      } catch (mailErr) {
+        console.warn('Invite email failed to send:', mailErr.message)
+      }
 
       // 4. Audit log
       await log({
@@ -147,6 +151,29 @@ router.put(
         workspaceId: parseInt(req.params.id),
         userId: parseInt(req.params.userId),
         role: req.body.role
+      })
+
+      res.json({ success: true, data: member })
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message })
+    }
+  }
+)
+
+/* =========================================================
+   MEMBER PERMISSIONS UPDATE (ADMIN ONLY)
+========================================================= */
+
+router.put(
+  '/:id/members/:userId/permissions',
+  protect,
+  requireRole('ADMIN'),
+  async (req, res) => {
+    try {
+      const member = await workspaceService.updateMemberPermissions({
+        workspaceId: parseInt(req.params.id),
+        userId: parseInt(req.params.userId),
+        permissions: req.body
       })
 
       res.json({ success: true, data: member })

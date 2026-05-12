@@ -48,8 +48,8 @@ router.post(
   }
 )
 
-// PUT /api/announcements/:id/pin — Admin only
-router.put('/:id/pin', protect, requirePermission('canPinAnnouncements'), async (req, res) => {
+// PUT /api/announcements/:id/pin — workspace members only
+router.put('/:id/pin', protect, async (req, res) => {
   try {
     const announcement = await announcementService.togglePin(
       parseInt(req.params.id),

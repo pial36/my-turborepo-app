@@ -60,6 +60,7 @@ model Workspace {
   goals         Goal[]
   announcements Announcement[]
   auditLogs     AuditLog[]
+  actionItems   ActionItem[]
 }
 
 model WorkspaceMember {
@@ -130,12 +131,13 @@ model ActionItem {
   status      ActionStatus @default(TODO)
   createdAt   DateTime     @default(now())    
 
+  workspaceId Int
+  goalId      Int?
+  assigneeId  Int?
 
-  goalId      Int
-  assigneeId  Int
-
-  goal     Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  assignee User @relation(fields: [assigneeId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  goal      Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  assignee  User?     @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
 }
 
 model Announcement {

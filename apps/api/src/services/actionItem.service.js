@@ -1,8 +1,8 @@
 const  prisma  = require('../lib/prisma')
 
-const createActionItem = async ({ title, goalId, assigneeId, priority, dueDate, status = 'TODO' }) => {
+const createActionItem = async ({ title, goalId, assigneeId, priority, dueDate, status = 'TODO', workspaceId }) => {
   return prisma.actionItem.create({
-    data: { title, goalId, assigneeId, priority, dueDate, status },
+    data: { title, goalId, assigneeId, priority, dueDate, status, workspaceId },
     include: {
       assignee: { select: { id: true, name: true, avatar: true } },
       goal: { select: { id: true, title: true } }
@@ -12,9 +12,7 @@ const createActionItem = async ({ title, goalId, assigneeId, priority, dueDate, 
 
 const getActionItemsByWorkspace = async (workspaceId) => {
   return prisma.actionItem.findMany({
-    where: {
-      goal: { workspaceId }        // filter through goal relation
-    },
+    where: { workspaceId },
     include: {
       assignee: { select: { id: true, name: true, avatar: true } },
       goal: { select: { id: true, title: true } }

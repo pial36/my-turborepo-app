@@ -2,7 +2,7 @@ const  prisma = require('../lib/prisma')
 
 const createWorkspace = async ({ name, description, accentColor, userId }) => {
   // create workspace + add creator as ADMIN in one transaction
-  return prisma.$transaction(async (tx) => {
+  const workspace = await prisma.$transaction(async (tx) => {
     const workspace = await tx.workspace.create({
       data: { name, description, accentColor }
     })
@@ -10,6 +10,18 @@ const createWorkspace = async ({ name, description, accentColor, userId }) => {
       data: { userId, workspaceId: workspace.id, role: 'ADMIN' }
     })
     return workspace
+  })
+
+  // Return workspace with members populated (same format as getUserWorkspaces)
+  return prisma.workspace.findUnique({
+    where: { id: workspace.id },
+    include: {
+      members: {
+        include: {
+          user: { select: { id: true, name: true, email: true, avatar: true } }
+        }
+      }
+    }
   })
 }
 
@@ -40,6 +52,13 @@ const getWorkspaceById = async (workspaceId) => {
       }
     }
   })
+}
+
+const getWorkspaceMembers = async (workspaceId) => {
+  const workspace = await getWorkspaceById(workspaceId)
+  if (!workspace) throw new Error('Workspace not found')
+  
+  return workspace.members.map(m => m.user)
 }
 
 const updateWorkspace = async (workspaceId, data) => {
@@ -92,14 +111,16 @@ const updateMemberRole = async ({ workspaceId, userId, role }) => {
 }
 
 const updateMemberPermissions = async ({ workspaceId, userId, permissions }) => {
+  // Build data object dynamically — only include fields that were explicitly sent
+  const data = {}
+  if (permissions.canCreateGoals !== undefined) data.canCreateGoals = permissions.canCreateGoals
+  if (permissions.canPostAnnouncements !== undefined) data.canPostAnnouncements = permissions.canPostAnnouncements
+  if (permissions.canInviteMembers !== undefined) data.canInviteMembers = permissions.canInviteMembers
+  if (permissions.canManageActionItems !== undefined) data.canManageActionItems = permissions.canManageActionItems
+
   return prisma.workspaceMember.update({
     where: { userId_workspaceId: { userId, workspaceId } },
-    data: {
-      canCreateGoals: permissions.canCreateGoals ?? undefined,
-      canPostAnnouncements: permissions.canPostAnnouncements ?? undefined,
-      canInviteMembers: permissions.canInviteMembers ?? undefined,
-      canManageActionItems: permissions.canManageActionItems ?? undefined,
-    }
+    data
   })
 }
 
@@ -120,6 +141,7 @@ module.exports = {
   createWorkspace,
   getUserWorkspaces,
   getWorkspaceById,
+  getWorkspaceMembers,
   updateWorkspace,
   deleteWorkspace,
   inviteMember,

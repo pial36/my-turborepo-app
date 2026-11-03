@@ -1,10 +1,11 @@
 const  prisma  = require('../lib/prisma')
 
-const createActionItem = async ({ title, goalId, assigneeId, priority, dueDate, status = 'TODO', workspaceId }) => {
+const createActionItem = async ({ title, goalId, assigneeId, priority, dueDate, status = 'TODO', workspaceId, createdById }) => {
   return prisma.actionItem.create({
-    data: { title, goalId, assigneeId, priority, dueDate, status, workspaceId },
+    data: { title, goalId, assigneeId, priority, dueDate, status, workspaceId, createdById },
     include: {
       assignee: { select: { id: true, name: true, avatar: true } },
+      creator: { select: { id: true, name: true, avatar: true } },
       goal: { select: { id: true, title: true } }
     }
   })
@@ -15,6 +16,7 @@ const getActionItemsByWorkspace = async (workspaceId) => {
     where: { workspaceId },
     include: {
       assignee: { select: { id: true, name: true, avatar: true } },
+      creator: { select: { id: true, name: true, avatar: true } },
       goal: { select: { id: true, title: true } }
     },
     orderBy: { createdAt: 'desc' }
@@ -25,7 +27,8 @@ const getActionItemsByGoal = async (goalId) => {
   return prisma.actionItem.findMany({
     where: { goalId },
     include: {
-      assignee: { select: { id: true, name: true, avatar: true } }
+      assignee: { select: { id: true, name: true, avatar: true } },
+      creator: { select: { id: true, name: true, avatar: true } }
     }
   })
 }
@@ -36,6 +39,18 @@ const updateActionItem = async (actionItemId, data) => {
     data,
     include: {
       assignee: { select: { id: true, name: true, avatar: true } },
+      creator: { select: { id: true, name: true, avatar: true } },
+      goal: { select: { id: true, title: true } }
+    }
+  })
+}
+
+const getActionItemById = async (actionItemId) => {
+  return prisma.actionItem.findUnique({
+    where: { id: actionItemId },
+    include: {
+      assignee: { select: { id: true, name: true, avatar: true } },
+      creator: { select: { id: true, name: true, avatar: true } },
       goal: { select: { id: true, title: true } }
     }
   })
@@ -50,5 +65,6 @@ module.exports = {
   getActionItemsByWorkspace,
   getActionItemsByGoal,
   updateActionItem,
+  getActionItemById,
   deleteActionItem
 }

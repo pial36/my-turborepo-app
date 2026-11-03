@@ -1,16 +1,17 @@
 const router = require('express').Router()
 const { protect } = require('../middleware/auth.middleware')
-const { requireRole, requirePermission } = require('../middleware/role.middleware')
+const { requireRole, requirePermission, requireRoleForAnnouncement } = require('../middleware/role.middleware')
 const announcementService = require('../services/announcement.service')
 const { log } = require('../services/auditLog.service')
-const { uploadAttachment } = require('../lib/multer')          
+const { uploadAttachment } = require('../lib/multer')
 const { uploadToCloudinary } = require('../lib/cloudinaryUpload')
+const prisma = require('../lib/prisma')
 
 // GET /api/announcements/workspace/:workspaceId
 router.get('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (req, res) => {
   try {
     const announcements = await announcementService.getAnnouncementsByWorkspace(
-      parseInt(req.params.workspaceId)   // ✅ matches :workspaceId
+      parseInt(req.params.workspaceId)
     )
     res.json({ success: true, data: announcements })
   } catch (err) {
@@ -18,11 +19,12 @@ router.get('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (req
   }
 })
 
- // ✅ permission-based
+// POST /api/announcements/workspace/:workspaceId
+// requirePermission reads req.params.workspaceId correctly here ✅
 router.post(
   '/workspace/:workspaceId',
   protect,
-  requirePermission('canPostAnnouncements'), 
+  requirePermission('canPostAnnouncements'),
   async (req, res) => {
     try {
       const announcement = await announcementService.createAnnouncement({
@@ -37,7 +39,6 @@ router.post(
         action: 'ANNOUNCEMENT_CREATED'
       })
 
-      // emit to workspace room
       const io = req.app.get('io')
       io.to(`workspace:${req.params.workspaceId}`).emit('announcement:new', announcement)
 
@@ -48,8 +49,9 @@ router.post(
   }
 )
 
-// PUT /api/announcements/:id/pin — workspace members only
-router.put('/:id/pin', protect, async (req, res) => {
+// PUT /api/announcements/:id/pin
+// FIX: use requireRoleForAnnouncement because :id here is announcement ID not workspace ID
+router.put('/:id/pin', protect, requireRoleForAnnouncement('ADMIN'), async (req, res) => {
   try {
     const announcement = await announcementService.togglePin(
       parseInt(req.params.id),
@@ -67,7 +69,7 @@ router.post('/:id/reactions', protect, async (req, res) => {
     const result = await announcementService.toggleReaction({
       announcementId: parseInt(req.params.id),
       userId: req.user.id,
-      emoji: req.body.emoji                      // ✅ fixed: emoji not type
+      emoji: req.body.emoji
     })
 
     const io = req.app.get('io')
@@ -87,17 +89,42 @@ router.post('/:id/reactions', protect, async (req, res) => {
 // POST /api/announcements/:id/comments
 router.post('/:id/comments', protect, async (req, res) => {
   try {
-    const comment = await announcementService.addComment({
-      announcementId: parseInt(req.params.id),
-      authorId: req.user.id,                     // ✅ fixed: authorId not userId
-      content: req.body.content                  // ✅ fixed: content not text
+    const announcementId = parseInt(req.params.id)
+
+    const announcement = await prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: { workspace: true }
+    })
+
+    if (!announcement) {
+      return res.status(404).json({ success: false, message: 'Announcement not found' })
+    }
+
+    const { comment, mentionedNotifications } = await announcementService.addComment({
+      announcementId,
+      authorId: req.user.id,
+      content: req.body.content,
+      workspaceName: announcement.workspace.name
     })
 
     const io = req.app.get('io')
-    io.to(`workspace:${req.body.workspaceId}`).emit('comment:new', {
-      announcementId: parseInt(req.params.id),
+
+    io.to(`workspace:${announcement.workspaceId}`).emit('comment:new', {
+      announcementId,
       comment
     })
+
+    if (mentionedNotifications && mentionedNotifications.length > 0) {
+      for (const notification of mentionedNotifications) {
+        io.to(`user:${notification.userId}`).emit('notification:new', {
+          id: notification.id,
+          type: notification.type,
+          message: notification.message,
+          createdAt: notification.createdAt,
+          read: notification.read
+        })
+      }
+    }
 
     res.status(201).json({ success: true, data: comment })
   } catch (err) {
@@ -105,18 +132,17 @@ router.post('/:id/comments', protect, async (req, res) => {
   }
 })
 
-// DELETE /api/announcements/:id — Admin only
+// DELETE /api/announcements/:id
 router.delete('/:id', protect, async (req, res) => {
   try {
     await announcementService.deleteAnnouncement(parseInt(req.params.id))
 
-      await log({
+    await log({
       workspaceId: req.body.workspaceId,
       userId: req.user.id,
       action: 'ANNOUNCEMENT_DELETED',
       metadata: { announcementId: parseInt(req.params.id) }
     })
-
 
     res.json({ success: true, message: 'Announcement deleted' })
   } catch (err) {
@@ -124,7 +150,7 @@ router.delete('/:id', protect, async (req, res) => {
   }
 })
 
-// POST /api/announcements/upload — file attachment
+// POST /api/announcements/upload
 router.post('/upload', protect, uploadAttachment.single('file'), async (req, res) => {
   try {
     if (!req.file) {

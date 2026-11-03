@@ -205,4 +205,18 @@ router.delete(
   }
 )
 
+/* =========================================================
+   GET WORKSPACE MEMBERS (for @mention autocomplete)
+========================================================= */
+router.get('/:id/members', protect, requireRole('MEMBER'), async (req, res) => {
+  try {
+    const members = await workspaceService.getWorkspaceMembers(
+      parseInt(req.params.id)
+    )
+    res.json({ success: true, data: members })
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
+})
+
 module.exports = router

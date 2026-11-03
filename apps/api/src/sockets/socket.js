@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken')
-const { prisma } = require('../lib/prisma')
+const prisma = require('../lib/prisma')
 
 // track online members per workspace
 // { workspaceId: Set(userId, userId, ...) }
@@ -23,6 +23,11 @@ module.exports = (io) => {
 
   io.on('connection', (socket) => {
     console.log(`✅ User ${socket.user.id} connected — socket: ${socket.id}`)
+
+    // ─── Auto-join personal room for direct notifications ───
+    // This is what allows io.to(`user:${userId}`).emit('notification:new', ...) to work
+    socket.join(`user:${socket.user.id}`)
+    console.log(`User ${socket.user.id} joined personal room user:${socket.user.id}`)
 
     // ─────────────────────────────────────────────
     // 1. JOIN WORKSPACE ROOM
@@ -50,13 +55,19 @@ module.exports = (io) => {
         }
         onlineMembers[workspaceId].add(socket.user.id)
 
-        // tell everyone in room who is online
-        io.to(room).emit('members:online', {
+        // emit to joining user first so they see the list immediately
+        socket.emit('members:online', {
           workspaceId,
           userIds: Array.from(onlineMembers[workspaceId])
         })
 
-        console.log(`User ${socket.user.id} joined room ${room}`)
+        // then emit to other members already in room so they see the new member
+        socket.to(room).emit('members:online', {
+          workspaceId,
+          userIds: Array.from(onlineMembers[workspaceId])
+        })
+
+        console.log(`✅ User ${socket.user.id} joined room ${room} — Online: [${Array.from(onlineMembers[workspaceId]).join(', ')}]`)
       } catch (err) {
         socket.emit('error', { message: err.message })
       }
@@ -72,13 +83,14 @@ module.exports = (io) => {
       if (onlineMembers[workspaceId]) {
         onlineMembers[workspaceId].delete(socket.user.id)
 
+        // emit updated list to remaining members
         io.to(room).emit('members:online', {
           workspaceId,
           userIds: Array.from(onlineMembers[workspaceId])
         })
-      }
 
-      console.log(`User ${socket.user.id} left room ${room}`)
+        console.log(`✅ User ${socket.user.id} left room ${room} — Remaining online: [${Array.from(onlineMembers[workspaceId]).join(', ')}]`)
+      }
     })
 
     // ─────────────────────────────────────────────
@@ -159,17 +171,20 @@ module.exports = (io) => {
     // 11. DISCONNECT
     // ─────────────────────────────────────────────
     socket.on('disconnect', () => {
-      console.log(`❌ User ${socket.user.id} disconnected`)
+      console.log(`❌ User ${socket.user.id} disconnected (socket: ${socket.id})`)
 
       // remove from all workspace online lists
       for (const [workspaceId, members] of Object.entries(onlineMembers)) {
         if (members.has(socket.user.id)) {
           members.delete(socket.user.id)
 
+          // emit updated online list to remaining members
           io.to(`workspace:${workspaceId}`).emit('members:online', {
             workspaceId,
             userIds: Array.from(members)
           })
+
+          console.log(`   ↳ Removed from workspace ${workspaceId} — Remaining: [${Array.from(members).join(', ')}]`)
         }
       }
     })

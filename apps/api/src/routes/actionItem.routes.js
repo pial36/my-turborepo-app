@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const { protect } = require('../middleware/auth.middleware')
-const { requireRole } = require('../middleware/role.middleware')
+const { requireRole, requirePermission, requireActionItemOwnerOrAdmin } = require('../middleware/role.middleware')
 const actionItemService = require('../services/actionItem.service')
 const { log } = require('../services/auditLog.service')
 
@@ -17,11 +17,12 @@ router.get('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (req
 })
 
 // POST /api/action-items/workspace/:workspaceId
-router.post('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (req, res) => {
+router.post('/workspace/:workspaceId', protect, requireRole('MEMBER'), requirePermission('canManageActionItems'), async (req, res) => {
   try {
     const item = await actionItemService.createActionItem({
       ...req.body,
-      workspaceId: parseInt(req.params.workspaceId) 
+      workspaceId: parseInt(req.params.workspaceId),
+      createdById: req.user.id  // Set the creator to current user
     })
 
     await log({
@@ -38,7 +39,7 @@ router.post('/workspace/:workspaceId', protect, requireRole('MEMBER'), async (re
 })
 
 // PUT /api/action-items/:id
-router.put('/:id', protect, async (req, res) => {
+router.put('/:id', protect, requireActionItemOwnerOrAdmin, async (req, res) => {
   try {
     const item = await actionItemService.updateActionItem(
       parseInt(req.params.id),
@@ -59,7 +60,7 @@ router.put('/:id', protect, async (req, res) => {
 })
 
 // DELETE /api/action-items/:id
-router.delete('/:id', protect, async (req, res) => {
+router.delete('/:id', protect, requireActionItemOwnerOrAdmin, async (req, res) => {
   try {
     await actionItemService.deleteActionItem(parseInt(req.params.id))
     res.json({ success: true, message: 'Action item deleted' })
@@ -68,12 +69,13 @@ router.delete('/:id', protect, async (req, res) => {
   }
 })
 
-router.put('/action-items/:id', protect, async (req, res) => {
+// PUT /api/action-items/:id/status - update status (admin or creator only)
+router.put('/:id/status', protect, requireActionItemOwnerOrAdmin, async (req, res) => {
   try {
-    const item = await actionItemService.updateStatus({
-      id: parseInt(req.params.id),
-      status: req.body.status
-    })
+    const item = await actionItemService.updateActionItem(
+      parseInt(req.params.id),
+      { status: req.body.status }
+    )
 
     const io = req.app.get('io')
 

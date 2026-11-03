@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "node src/index.js",
-    "start": "node src/index.js"
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "start": "prisma migrate deploy && node src/index.js",
+    "seed": "prisma db seed"
   },
   "keywords": [],
   "author": "",
@@ -30,5 +33,7 @@
     "@types/node": "^25.6.0",
     "nodemon": "^3.1.14"
   },
-  "prisma": {}
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
 }

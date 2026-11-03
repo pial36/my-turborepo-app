@@ -183,7 +183,9 @@ async function main() {
         status: 'DONE',
         dueDate: new Date('2024-06-30'),
         goalId: goal1.id,
-        assigneeId: admin.id
+        assigneeId: admin.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       },
       {
         title: 'Design system components',
@@ -191,7 +193,9 @@ async function main() {
         status: 'DOING',
         dueDate: new Date('2024-07-15'),
         goalId: goal1.id,
-        assigneeId: member1.id
+        assigneeId: member1.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       },
       {
         title: 'Write API documentation',
@@ -199,7 +203,9 @@ async function main() {
         status: 'DOING',
         dueDate: new Date('2024-07-20'),
         goalId: goal1.id,
-        assigneeId: admin.id
+        assigneeId: admin.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       },
       {
         title: 'Set up error monitoring',
@@ -207,7 +213,9 @@ async function main() {
         status: 'TODO',
         dueDate: new Date('2024-08-01'),
         goalId: goal1.id,
-        assigneeId: member2.id
+        assigneeId: member2.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       },
       {
         title: 'Create onboarding checklist',
@@ -215,7 +223,9 @@ async function main() {
         status: 'TODO',
         dueDate: new Date('2024-08-15'),
         goalId: goal2.id,
-        assigneeId: member1.id
+        assigneeId: member1.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       },
       {
         title: 'Record welcome video',
@@ -223,7 +233,9 @@ async function main() {
         status: 'TODO',
         dueDate: new Date('2024-09-01'),
         goalId: goal2.id,
-        assigneeId: member1.id
+        assigneeId: member1.id,
+        workspaceId: workspace.id,
+        createdById: admin.id
       }
     ]
   })

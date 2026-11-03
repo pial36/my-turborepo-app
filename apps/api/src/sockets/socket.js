@@ -5,12 +5,21 @@ const prisma = require('../lib/prisma')
 // { workspaceId: Set(userId, userId, ...) }
 const onlineMembers = {}
 
+// read a single cookie value from the raw Cookie header
+const getCookie = (header, name) => {
+  if (!header) return null
+  const match = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 module.exports = (io) => {
 
   // ─── Auth middleware — verify token before any connection ───
+  // The access token is an httpOnly cookie, so the browser sends it with the
+  // handshake (withCredentials) and client JS can never read it.
   io.use((socket, next) => {
     try {
-      const token = socket.handshake.auth.token
+      const token = getCookie(socket.handshake.headers.cookie, 'accessToken')
       if (!token) return next(new Error('Not authenticated'))
 
       const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET)

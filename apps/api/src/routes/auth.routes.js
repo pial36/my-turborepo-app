@@ -22,17 +22,23 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken }
 }
 
+// Web and API run on different domains in production (separate Railway
+// services), so cookies must be SameSite=None + Secure to be sent cross-site.
+const isProd = process.env.NODE_ENV === 'production'
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
+  path: '/'
+}
+
 const setTokenCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    ...cookieOptions,
     maxAge: 15 * 60 * 1000
   })
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000
   })
 }
@@ -156,8 +162,8 @@ router.post('/refresh', async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('accessToken')
-  res.clearCookie('refreshToken')
+  res.clearCookie('accessToken', cookieOptions)
+  res.clearCookie('refreshToken', cookieOptions)
   res.json({ success: true, message: 'Logged out' })
 })
 

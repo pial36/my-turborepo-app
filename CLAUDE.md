@@ -106,14 +106,30 @@ Demo accounts (seed): `admin@demo.com`, `jane@demo.com`, `bob@demo.com` / `demo1
 **Real-time** ✅ posts/reactions/comments/pins/status/items broadcast · ✅ presence per tab · ✅ @mention → notification + email
 **Analytics** ✅ totals / completed this week (`completedAt`) / overdue · ✅ Recharts · ✅ CSV (RFC 4180)
 **Advanced** ✅ #4 RBAC (API-enforced, last-admin guard) · ✅ #5 audit log (all mutations, filters, filtered CSV, DB trigger blocks UPDATE)
-**Bonus** ✅ Nodemailer · ✅ API tests (36, Jest+Supertest) · ⚠️ Swagger (auth routes only) · ❌ dark mode · ❌ ⌘K palette · ❌ PWA · ❌ frontend tests
+**Bonus** ✅ Nodemailer · ✅ API tests (38, Jest+Supertest) · ✅ Swagger (all 49 ops, test enforces coverage) · ✅ dark/light/system theme · ✅ ⌘K palette · ✅ PWA (manifest + offline shell) · ❌ frontend tests
 **Monorepo** ✅ `packages/shared` used by both apps · ✅ turbo build/test/lint pipeline
 **Submission** ❌ deployed to Railway · ❌ README live URLs · ❌ video walkthrough · ⚠️ early commits not conventional
 
 ### Open follow-ups
-- Swagger docs for non-auth routes.
 - Touch-friendly Kanban (status select on cards, or dnd-kit which is installed but unused).
-- Dark mode / ⌘K / PWA if time allows (bonus points).
+- Frontend tests (React Testing Library) — last unbuilt bonus item.
+
+## Frontend conventions
+
+- **Colours:** never hard-code neutrals. Use the `--c-*` tokens from `globals.css`
+  (`--c-bg`, `--c-surface`, `--c-text`, `--c-border`, …); they switch in dark mode.
+  Brand indigo (`#4f46e5`/`#6366f1`) and `color: #fff` on brand buttons are fine.
+  Workspace accent is `var(--ws-accent)`.
+- **styled-jsx + `next/link`:** `<Link className=…>` is NOT scoped by styled-jsx, so
+  its selectors must be wrapped in `:global(...)` (see sidebar.js, Topbar.js).
+- **Theme:** `hooks/useTheme.js` (shared zustand store) + `lib/theme.js`
+  (boot script in `app/layout.js`). **Palette:** `components/layout/CommandPalette.js`,
+  shortcut handled in `app/(dashboard)/layout.js`.
+- **PWA:** `app/manifest.js`, `public/sw.js` (registered in production only by
+  `components/ServiceWorkerRegister.js`), `public/offline.html`, icons in `public/icons`.
+  Bump `VERSION` in sw.js when changing caching behaviour.
+- **API docs:** add new endpoints to `apps/api/src/lib/openapiPaths.js`; a test fails
+  if any Express route is undocumented.
 
 ## Testing locally without touching real data
 

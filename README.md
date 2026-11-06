@@ -101,11 +101,22 @@ items, goal-status chart (Recharts), CSV export of goals and action items.
 
 ## Bonus Features
 
+- **Dark / light theme** — follows the system preference by default; the topbar
+  button cycles system → light → dark and the choice is remembered. A script in
+  `<head>` applies it before first paint, so there is no flash. All neutral colours
+  are CSS tokens (`--c-*` in `globals.css`).
+- **⌘K / Ctrl+K command palette** — jump to any page or goal, switch workspace,
+  change theme or sign out, fully keyboard-driven (↑ ↓ ↵ Esc). Also opened from the
+  search box in the topbar.
+- **PWA** — installable (web manifest, maskable icons, theme colour) with a
+  service worker that keeps an offline app shell and shows an offline page when
+  there is no connection.
 - **Email notifications** — invitations and `@mention` emails via Nodemailer.
-- **Tests** — 36 Jest + Supertest integration tests (`apps/api/tests`) covering
-  auth, workspace isolation, permissions, sanitization, invites, analytics and the
-  audit log trigger.
-- **OpenAPI / Swagger** — served at `/api/docs` (auth endpoints documented).
+- **Tests** — 38 Jest + Supertest integration tests (`apps/api/tests`) covering
+  auth, workspace isolation, permissions, sanitization, invites, analytics, the
+  audit log trigger, and that every Express route appears in the OpenAPI spec.
+- **OpenAPI / Swagger** — every endpoint (49 operations) documented and served at
+  `/api/docs`.
 
 ---
 
@@ -238,8 +249,9 @@ on the API and `CLIENT_URL` set to the exact web URL.
 
 - Advanced features #1 (collaborative editing), #2 (optimistic UI — partly
   present for reactions, pins and Kanban moves) and #3 (offline support) were not chosen.
-- Not built from the bonus list: dark mode, ⌘K command palette, PWA, frontend tests.
-- Swagger documents the auth endpoints only.
+- No frontend tests (the API has an integration suite).
+- Offline support is a read-only app shell: data is not cached and writes are not
+  queued (that is advanced feature #3, not chosen).
 - `@mentions` match names without spaces (type `@JaneSmith` for "Jane Smith");
   the comment box autocompletes this.
 - Audit log rows are removed when their workspace is deleted.

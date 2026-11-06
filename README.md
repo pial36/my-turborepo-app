@@ -178,11 +178,11 @@ EMAIL_PASS=your-app-password
 NODE_ENV=development
 ```
 
-Create `apps/web/.env.local`:
+The web app proxies `/api` and `/socket.io` to `http://localhost:5000` by default, so
+it needs no env file locally. To point it elsewhere, create `apps/web/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+API_URL=http://localhost:5000
 ```
 
 Set up the database and run both apps:
@@ -208,20 +208,51 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/teamhub_test npm test
 
 ## Deployment (Railway)
 
-One Railway project with three services: PostgreSQL (plugin), **api** and **web**,
-both pointing at this repo. Leave the root directory as the repo root so npm
-workspaces can link `@teamhub/shared`.
+One Railway project with three services — **Postgres**, **api** and **web** — both
+app services deploying this repo from its root (npm workspaces need the root to
+link `@teamhub/shared`). Build/start commands, health checks and watch paths are
+config-as-code in `apps/api/railway.json` and `apps/web/railway.json`.
 
-| Service | Build command | Start command | Watch paths |
-|---------|---------------|---------------|-------------|
-| api | `npx turbo run build --filter=api` | `npm run start -w api` (runs `prisma migrate deploy`, then the server) | `apps/api/**`, `packages/**` |
-| web | `npx turbo run build --filter=web` | `npm run start -w web` | `apps/web/**`, `packages/**` |
+**How requests flow:** the browser only ever talks to the web service. Next.js
+rewrites `/api/*` and `/socket.io/*` to the API (`API_URL`), so the auth cookies are
+first-party. Calling the API directly from another `*.up.railway.app` host would make
+them third-party cookies, which Safari and Chrome Incognito block.
 
-After the first deploy, seed once from the api service shell: `npm run seed`.
+1. **New project** → *Deploy from GitHub repo* → `pial36/my-turborepo-app`. Rename the
+   service to `api`.
+2. **+ New → Database → PostgreSQL.**
+3. **api service → Settings:** Source → branch `main`; Config-as-code → *Add file path*
+   `/apps/api/railway.json`; Networking → *Generate Domain*.
+4. **api service → Variables:**
+   ```env
+   DATABASE_URL=${{Postgres.DATABASE_URL}}
+   JWT_ACCESS_SECRET=<long random string>
+   JWT_REFRESH_SECRET=<different long random string>
+   NODE_ENV=production
+   CLIENT_URL=https://<web domain from step 6>
+   CLOUDINARY_CLOUD_NAME=…
+   CLOUDINARY_API_KEY=…
+   CLOUDINARY_API_SECRET=…
+   EMAIL_USER=…
+   EMAIL_PASS=…
+   ```
+5. **+ New → GitHub repo** → same repo again; rename to `web`.
+6. **web service → Settings:** branch `main`; config file `/apps/web/railway.json`;
+   *Generate Domain*. Put this domain in the api's `CLIENT_URL`.
+7. **web service → Variables:** `API_URL=https://<api domain from step 3>`
+   (read at build time — redeploy web if it changes). Leave `NEXT_PUBLIC_*` unset.
+8. Deploy both. The api runs `prisma migrate deploy` on start; check
+   `https://<api domain>/health` and `https://<api domain>/api/docs`.
+9. **Seed once** from your machine, using the Postgres service's *Connect →
+   Public network* URL (this wipes the database):
+   ```bash
+   cd apps/api
+   DATABASE_URL="<DATABASE_PUBLIC_URL>" npm run seed
+   ```
+10. Log in at `https://<web domain>` as `admin@demo.com` / `demo123456` and put both
+    URLs in the *Live URLs* table at the top of this README.
 
-Web and API live on different `*.up.railway.app` domains, so auth cookies are
-sent cross-site (`SameSite=None; Secure`). That requires `NODE_ENV=production`
-on the API and `CLIENT_URL` set to the exact web URL.
+Generate secrets with `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
 
 ## Environment Variables
 
@@ -240,8 +271,9 @@ on the API and `CLIENT_URL` set to the exact web URL.
 ### Web
 | Variable | Description |
 |----------|-------------|
-| NEXT_PUBLIC_API_URL | API base URL |
-| NEXT_PUBLIC_SOCKET_URL | Socket.io server URL (same as the API) |
+| API_URL | API origin the web server proxies `/api` and `/socket.io` to (build time; default `http://localhost:5000`) |
+| NEXT_PUBLIC_API_URL | Optional. Call the API directly instead of through the proxy (cookies become cross-site) |
+| NEXT_PUBLIC_SOCKET_URL | Optional. Same, for Socket.IO |
 
 ---
 

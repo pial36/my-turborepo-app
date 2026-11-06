@@ -66,13 +66,18 @@ Demo accounts (seed): `admin@demo.com`, `jane@demo.com`, `bob@demo.com` / `demo1
 
 ## Things that will bite you
 
-- **Cross-site cookies.** Web and API are on different `*.up.railway.app` hosts
-  (different sites). Cookies must be `SameSite=None; Secure` in production — see
-  `cookieOptions` in `auth.routes.js`. API needs `NODE_ENV=production` and an exact
-  `CLIENT_URL` (no trailing slash) for CORS.
-- **The web app can't see auth cookies.** They belong to the API domain. So there is
-  no Next middleware/proxy auth check; `app/(dashboard)/layout.js` calls `/api/auth/me`
-  and redirects to `/login`. Don't reintroduce a cookie-reading middleware.
+- **Same-origin proxy.** The browser only talks to the web app; `next.config.mjs`
+  rewrites `/api/*` and `/socket.io/*` to `API_URL` (build-time env, default
+  `http://localhost:5000`). This keeps auth cookies first-party — direct calls between
+  two `*.up.railway.app` hosts are third-party and Safari/Incognito block them.
+  `skipTrailingSlashRedirect` + the explicit `/socket.io/` rule are required or the
+  Socket.IO handshake 308s/404s. `NEXT_PUBLIC_API_URL`/`_SOCKET_URL` are optional
+  overrides for calling the API directly.
+- **Cookies** are still `SameSite=None; Secure` in production (`cookieOptions` in
+  `auth.routes.js`) so the direct mode keeps working; needs `NODE_ENV=production`.
+- **Auth guard is client-side.** httpOnly cookies are invisible to JS, so
+  `app/(dashboard)/layout.js` calls `/api/auth/me` and redirects to `/login`.
+  Don't add a cookie-reading Next middleware/proxy.ts.
 - **Socket auth reads the `accessToken` cookie from the handshake headers.** Client
   connects with `withCredentials: true`; never read tokens from `document.cookie`.
 - **Socket echo.** Routes emit with `io.to('workspace:<id>')`, which includes the sender.
@@ -84,7 +89,10 @@ Demo accounts (seed): `admin@demo.com`, `jane@demo.com`, `bob@demo.com` / `demo1
 - **Express 5:** `req.body` is `undefined` when no body is sent; guard with `req.body || {}`.
 - **Line endings:** most API files are CRLF. Keep the file's existing endings.
 - `WorkspaceMember.role` is a string, `'ADMIN'` | `'MEMBER'`.
-- Railway: API `start` runs `prisma migrate deploy` before boot. Seed manually once.
+- Railway: config-as-code in `apps/api/railway.json` and `apps/web/railway.json`
+  (set each service's config path; root directory stays the repo root). API `start`
+  runs `prisma migrate deploy` before boot. Seed once from a local machine with the
+  Postgres public URL. Step-by-step guide: README → Deployment.
 - Next 16: `next lint` is gone; `middleware.js` is renamed `proxy.js` (we use neither).
 
 ## Conventions

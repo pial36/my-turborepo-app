@@ -10,7 +10,7 @@ import ActionItemModal from '@/components/actions/Actionitemmodal';
 import toast from 'react-hot-toast';
 
 export default function ActionItemsPage() {
-  const { actionItems, fetchActionItems, updateActionItem, deleteActionItem, moveItemOptimistic, view, setView, isLoading } = useActionStore();
+  const { actionItems, fetchActionItems, updateActionItem, deleteActionItem, view, setView, isLoading, error } = useActionStore();
   const { currentWorkspace, fetchWorkspaceById } = useWorkspaceStore();
   const { user } = useAuthStore();
   const [showModal, setShowModal] = useState(false);
@@ -32,7 +32,7 @@ export default function ActionItemsPage() {
   const handleDrop = async (e, status) => {
     e.preventDefault();
     if (!dragging || dragging.status === status) return;
-    moveItemOptimistic(dragging.id, status);
+    // updateActionItem moves the card optimistically and rolls back on error
     const r = await updateActionItem(dragging.id, { status });
     if (!r.success) toast.error(r.error);
     setDragging(null);
@@ -57,6 +57,9 @@ export default function ActionItemsPage() {
     const isCreator = item.creator?.id === user.id;
     return isAdmin || isCreator;
   };
+
+  // the assignee may also move their own card (matches the API rule)
+  const canMove = (item) => canEditDelete(item) || (!!user && item.assigneeId === user.id);
 
   return (
     <div className="page">
@@ -88,6 +91,8 @@ export default function ActionItemsPage() {
 
       {isLoading ? (
         <div className="loading">Loading...</div>
+      ) : error ? (
+        <div className="loading">{error}</div>
       ) : view === 'kanban' ? (
         /* ── Kanban ── */
         <div className="kanban">
@@ -108,9 +113,10 @@ export default function ActionItemsPage() {
                   {items.map(item => (
                     <div
                       key={item.id}
-                      className="kanban-card"
-                      draggable
+                      className={`kanban-card ${canMove(item) ? '' : 'kanban-card--locked'}`}
+                      draggable={canMove(item)}
                       onDragStart={e => handleDragStart(e, item)}
+                      title={canMove(item) ? 'Drag to change status' : 'Only the creator, assignee or an admin can move this'}
                     >
                       <p className="kanban-card-title">{item.title}</p>
                       <div className="kanban-card-meta">
@@ -221,6 +227,7 @@ export default function ActionItemsPage() {
         }
         .kanban-card:hover { box-shadow: 0 4px 12px rgba(16,24,40,0.08); }
         .kanban-card:active { cursor: grabbing; }
+        .kanban-card--locked { cursor: default; opacity: 0.85; }
         .kanban-card-title { font-size: 13.5px; color: #101828; font-weight: 500; margin: 0; line-height: 1.4; }
         .kanban-card-meta { display: flex; align-items: center; gap: 8px; }
         .kanban-card-date { font-size: 11px; color: #98a2b3; }

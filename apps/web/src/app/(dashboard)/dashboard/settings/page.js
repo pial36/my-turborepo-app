@@ -8,16 +8,12 @@ import useWorkspaceStore from '@/stores/workspaceStore';
 import useAuthStore from '@/stores/authStore';
 import { getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { PERMISSIONS } from '@teamhub/shared';
 
-const PERMISSIONS = [
-  { key: 'canCreateGoals', label: 'Create Goals' },
-  { key: 'canPostAnnouncements', label: 'Post Announcements' },
-  { key: 'canInviteMembers', label: 'Invite Members' },
-  { key: 'canManageActionItems', label: 'Manage Action Items' },
-];
+
 
 export default function SettingsPage() {
-  const { currentWorkspace, updateWorkspace, inviteMember, removeMember, updateMemberRole, updateMemberPermissions, deleteWorkspace, fetchWorkspaceById } = useWorkspaceStore();
+  const { currentWorkspace, updateWorkspace, inviteMember, removeMember, updateMemberRole, updateMemberPermissions, deleteWorkspace, fetchWorkspaceById, invites, fetchInvites, cancelInvite } = useWorkspaceStore();
   const { user } = useAuthStore();
   const [wsForm, setWsForm] = useState({ name: '', description: '', accentColor: '#6366f1' });
   const [originalForm, setOriginalForm] = useState({ name: '', description: '', accentColor: '#6366f1' });
@@ -39,6 +35,10 @@ export default function SettingsPage() {
       fetchWorkspaceById(currentWorkspace.id);
     }
   }, [currentWorkspace?.id]);
+
+  useEffect(() => {
+    if (currentWorkspace?.id && isAdmin) fetchInvites(currentWorkspace.id);
+  }, [currentWorkspace?.id, isAdmin]);
 
   useEffect(() => {
     if (currentWorkspace) {
@@ -73,7 +73,7 @@ export default function SettingsPage() {
     const r = await inviteMember(currentWorkspace.id, inviteEmail.trim());
     setInviting(false);
     if (r.success) {
-      toast.success('Invitation sent!');
+      toast.success(r.message);
       setInviteEmail('');
     } else {
       toast.error(r.error);
@@ -201,6 +201,29 @@ export default function SettingsPage() {
                 <UserPlus size={14} /> {inviting ? 'Inviting...' : 'Invite'}
               </button>
             </form>
+          )}
+
+          {/* Pending invites — emails that haven't signed up yet */}
+          {isAdmin && invites.length > 0 && (
+            <div className="pending-invites">
+              <div className="pending-title">Pending invites</div>
+              {invites.map(inv => (
+                <div key={inv.id} className="pending-row">
+                  <span className="pending-email">{inv.email}</span>
+                  <span className="pending-hint">joins when they sign up</span>
+                  <button
+                    className="icon-btn icon-btn--danger"
+                    title="Cancel invite"
+                    onClick={async () => {
+                      const r = await cancelInvite(currentWorkspace.id, inv.id);
+                      if (!r.success) toast.error(r.error);
+                    }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
 
           {/* Member list */}
@@ -337,6 +360,11 @@ export default function SettingsPage() {
         .btn-danger:hover { background: #b91c1c; }
         .invite-form { display: flex; gap: 10px; margin-bottom: 20px; margin-top: 16px; }
         .invite-form .input { flex: 1; }
+        .pending-invites { border: 1px dashed #e4e7ec; border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; }
+        .pending-title { font-size: 11px; font-weight: 700; color: #98a2b3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .pending-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
+        .pending-email { color: #101828; font-weight: 500; }
+        .pending-hint { color: #98a2b3; font-size: 12px; flex: 1; }
         .btn-primary {
           display: flex; align-items: center; gap: 6px; padding: 0 18px;
           height: 42px; background: #4f46e5; color: #fff; border: none; border-radius: 9px;

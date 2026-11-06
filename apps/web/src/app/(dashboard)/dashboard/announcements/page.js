@@ -9,8 +9,13 @@ import useWorkspaceStore from '@/stores/workspaceStore';
 import useAuthStore from '@/stores/authStore';
 import { formatRelativeTime, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import RichTextEditor from '@/components/announcements/RichTextEditor';
+import { REACTION_EMOJI } from '@teamhub/shared';
 
-const EMOJIS = ['👍', '🎉', '🔥', '✅', '❤️', '🚀'];
+// same list the API validates against
+const EMOJIS = REACTION_EMOJI;
+
+const isHtml = (text = '') => /^\s*<[a-z][\s\S]*>/i.test(text);
 
 // "Raiya Chowdhury" → "RaiyaChowdhury"
 // This is what you type after @ and what the backend matches against
@@ -202,7 +207,7 @@ function CommentInput({ announcementId, members, onSubmit }) {
 export default function AnnouncementsPage() {
   const {
     announcements, fetchAnnouncements, createAnnouncement,
-    deleteAnnouncement, togglePin, toggleReaction, addComment, isLoading
+    deleteAnnouncement, togglePin, toggleReaction, addComment, isLoading, error
   } = useAnnouncementStore();
   const { currentWorkspace, fetchWorkspaceById } = useWorkspaceStore();
   const { user } = useAuthStore();
@@ -226,7 +231,7 @@ export default function AnnouncementsPage() {
   const handlePost = async () => {
     if (!content.trim()) return;
     setPosting(true);
-    const r = await createAnnouncement(currentWorkspace.id, content.trim());
+    const r = await createAnnouncement(currentWorkspace.id, content);
     if (r.success) setContent('');
     else toast.error(r.error);
     setPosting(false);
@@ -234,7 +239,7 @@ export default function AnnouncementsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this announcement?')) return;
-    const r = await deleteAnnouncement(id, currentWorkspace.id);
+    const r = await deleteAnnouncement(id);
     if (!r.success) toast.error(r.error);
   };
 
@@ -245,11 +250,12 @@ export default function AnnouncementsPage() {
 
   const handleReaction = async (announcementId, emoji) => {
     setShowEmojiFor(null);
-    await toggleReaction(announcementId, emoji, currentWorkspace.id);
+    const r = await toggleReaction(announcementId, emoji, user?.id);
+    if (!r.success) toast.error(r.error);
   };
 
   const handleComment = async (announcementId, text) => {
-    const r = await addComment(announcementId, text, currentWorkspace.id);
+    const r = await addComment(announcementId, text);
     if (!r.success) toast.error(r.error);
   };
 
@@ -276,12 +282,10 @@ export default function AnnouncementsPage() {
       {/* Compose — admin or members with canPostAnnouncements */}
       {canPost && (
         <div className="compose-card">
-          <textarea
+          <RichTextEditor
             placeholder="Write an announcement for your team..."
             value={content}
-            onChange={e => setContent(e.target.value)}
-            className="compose-textarea"
-            rows={3}
+            onChange={setContent}
           />
           <div className="compose-footer">
             <span className="compose-hint">Visible to all workspace members</span>
@@ -294,6 +298,8 @@ export default function AnnouncementsPage() {
 
       {isLoading ? (
         <div className="loading">Loading...</div>
+      ) : error ? (
+        <div className="empty-state">{error}</div>
       ) : sorted.length === 0 ? (
         <div className="empty-state">No announcements yet.</div>
       ) : (
@@ -319,26 +325,33 @@ export default function AnnouncementsPage() {
                       <span className="ann-time">{formatRelativeTime(ann.createdAt)}</span>
                     </div>
                   </div>
-                  {isAdmin && (
+                  {(isAdmin || ann.authorId === user?.id) && (
                     <div className="ann-header-actions">
-                      <button
-                        className={`icon-btn ${ann.pinned ? 'icon-btn--active' : ''}`}
-                        onClick={() => handlePin(ann.id, ann.pinned)}
-                        title={ann.pinned ? 'Unpin' : 'Pin to top'}
-                      >
-                        <Pin size={14} />
-                      </button>
-                      <button className="icon-btn icon-btn--danger" onClick={() => handleDelete(ann.id)}>
+                      {isAdmin && (
+                        <button
+                          className={`icon-btn ${ann.pinned ? 'icon-btn--active' : ''}`}
+                          onClick={() => handlePin(ann.id, ann.pinned)}
+                          title={ann.pinned ? 'Unpin' : 'Pin to top'}
+                        >
+                          <Pin size={14} />
+                        </button>
+                      )}
+                      <button className="icon-btn icon-btn--danger" onClick={() => handleDelete(ann.id)} title="Delete">
                         <Trash2 size={14} />
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Content with highlighted @mentions */}
-                <p className="ann-content">
-                  <RenderContent text={ann.content} />
-                </p>
+                {/* Rich text is sanitized by the API before it is stored;
+                    older plain-text posts fall back to @mention highlighting */}
+                {isHtml(ann.content) ? (
+                  <div className="rich-content" dangerouslySetInnerHTML={{ __html: ann.content }} />
+                ) : (
+                  <p className="ann-content">
+                    <RenderContent text={ann.content} />
+                  </p>
+                )}
 
                 {/* Reactions */}
                 <div className="ann-reactions">

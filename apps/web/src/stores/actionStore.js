@@ -14,17 +14,19 @@ export const KANBAN_COLUMNS = [
 const useActionStore = create((set, get) => ({
   actionItems: [],
   isLoading: false,
+  error: null,
   view: 'kanban', // 'kanban' | 'list'
 
   setView: (view) => set({ view }),
 
   fetchActionItems: async (workspaceId) => {
-    set({ isLoading: true });
+    // clear first so the previous workspace's items never flash
+    set({ isLoading: true, error: null, actionItems: [] });
     try {
       const res = await api.get(`/api/action-items/workspace/${workspaceId}`);
       set({ actionItems: res.data.data || [], isLoading: false });
-    } catch (_) {
-      set({ isLoading: false });
+    } catch (err) {
+      set({ isLoading: false, error: err.response?.data?.message || 'Failed to load action items' });
     }
   },
 
@@ -32,7 +34,7 @@ const useActionStore = create((set, get) => ({
     try {
       const res = await api.post(`/api/action-items/workspace/${workspaceId}`, data);
       const item = res.data.data;
-      set((state) => ({ actionItems: [item, ...state.actionItems] }));
+      get().socketAddItem(item);
       return { success: true, actionItem: item };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Failed to create action item' };
@@ -51,7 +53,7 @@ const useActionStore = create((set, get) => ({
       const res = await api.put(`/api/action-items/${itemId}`, data);
       const item = res.data.data;
       set((state) => ({
-        actionItems: state.actionItems.map((a) => (a.id === itemId ? item : a)),
+        actionItems: state.actionItems.map((a) => (a.id === itemId ? { ...a, ...item } : a)),
       }));
       return { success: true };
     } catch (err) {
@@ -85,11 +87,15 @@ const useActionStore = create((set, get) => ({
     return get().actionItems.filter((a) => a.status === status);
   },
 
-  // Socket handlers
+  // Socket handlers — merge, since some events carry only { id, status }
   socketUpdateItem: (item) => {
     set((state) => ({
-      actionItems: state.actionItems.map((a) => (a.id === item.id ? item : a)),
+      actionItems: state.actionItems.map((a) => (a.id === item.id ? { ...a, ...item } : a)),
     }));
+  },
+
+  socketRemoveItem: (itemId) => {
+    set((state) => ({ actionItems: state.actionItems.filter((a) => a.id !== itemId) }));
   },
 
   socketAddItem: (item) => {

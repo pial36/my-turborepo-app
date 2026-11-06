@@ -8,6 +8,7 @@ const useWorkspaceStore = create(
       workspaces: [],
       currentWorkspace: null,
       members: [],
+      invites: [],
       isLoading: false,
 
       fetchWorkspaces: async () => {
@@ -15,11 +16,11 @@ const useWorkspaceStore = create(
         try {
           const res = await api.get('/api/workspaces');
           const workspaces = res.data.data || [];
-          set({ workspaces, isLoading: false });
-          // auto-select first if none selected
-          if (!get().currentWorkspace && workspaces.length > 0) {
-            set({ currentWorkspace: workspaces[0] });
-          }
+          // the persisted selection may belong to another user or a deleted
+          // workspace: keep it only if it is still in this user's list
+          const savedId = get().currentWorkspace?.id;
+          const current = workspaces.find((w) => w.id === savedId) || workspaces[0] || null;
+          set({ workspaces, currentWorkspace: current, isLoading: false });
         } catch (_) {
           set({ isLoading: false });
         }
@@ -84,7 +85,13 @@ const useWorkspaceStore = create(
       inviteMember: async (workspaceId, email) => {
         try {
           const res = await api.post(`/api/workspaces/${workspaceId}/invite`, { email });
-          const member = res.data.data;
+          const { data, pending, message } = res.data;
+          if (pending) {
+            // no account yet — the invite is accepted when they register
+            set((state) => ({ invites: [data, ...state.invites] }));
+            return { success: true, pending: true, message };
+          }
+          const member = data;
           if (member) {
             set((state) => ({
               members: [...state.members, member],
@@ -95,7 +102,7 @@ const useWorkspaceStore = create(
           }
           // Refresh workspace to ensure latest member list is persisted
           await get().fetchWorkspaceById(workspaceId);
-          return { success: true, message: 'Invitation sent successfully' };
+          return { success: true, message: message || 'Member added' };
         } catch (err) {
           return { success: false, error: err.response?.data?.message || 'Failed to invite member' };
         }
@@ -171,10 +178,51 @@ const useWorkspaceStore = create(
         }
       },
 
-      // called by socket: member:invited
-      socketAddMember: (member) => {
-        set((state) => ({ members: [...state.members, member] }));
+      // pending invites for emails without an account (admin only)
+      fetchInvites: async (workspaceId) => {
+        try {
+          const res = await api.get(`/api/workspaces/${workspaceId}/invites`);
+          set({ invites: res.data.data || [] });
+        } catch (_) {
+          set({ invites: [] });
+        }
       },
+
+      cancelInvite: async (workspaceId, inviteId) => {
+        try {
+          await api.delete(`/api/workspaces/${workspaceId}/invites/${inviteId}`);
+          set((state) => ({ invites: state.invites.filter((i) => i.id !== inviteId) }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, error: err.response?.data?.message || 'Failed to cancel invite' };
+        }
+      },
+
+      // called by socket: member:invited { workspaceId, member }
+      socketAddMember: ({ workspaceId, member } = {}) => {
+        if (!member) return;
+        const addUnique = (list = []) =>
+          list.some((m) => m.userId === member.userId) ? list : [...list, member];
+        set((state) => ({
+          members: addUnique(state.members),
+          currentWorkspace: state.currentWorkspace?.id === workspaceId
+            ? { ...state.currentWorkspace, members: addUnique(state.currentWorkspace.members) }
+            : state.currentWorkspace,
+        }));
+      },
+
+      // called by socket: workspace:updated (name/description/accent)
+      socketUpdateWorkspace: (workspace) => {
+        set((state) => ({
+          workspaces: state.workspaces.map((w) => (w.id === workspace.id ? { ...w, ...workspace } : w)),
+          currentWorkspace: state.currentWorkspace?.id === workspace.id
+            ? { ...state.currentWorkspace, ...workspace }
+            : state.currentWorkspace,
+        }));
+      },
+
+      // logout: forget the selection so the next user starts clean
+      reset: () => set({ workspaces: [], currentWorkspace: null, members: [], invites: [] }),
     }),
     {
       name: 'workspace-storage',

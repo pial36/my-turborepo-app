@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useAuthStore from '@/stores/authStore';
 import useWorkspaceStore from '@/stores/workspaceStore';
@@ -17,10 +17,29 @@ export default function DashboardLayout({ children }) {
   const { user, isAuthenticated, fetchMe } = useAuthStore();
   const { currentWorkspace, fetchWorkspaces } = useWorkspaceStore();
   const { fetchNotifications } = useNotificationStore();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [booted, setBooted] = useState(false);
 
   useSocket(currentWorkspace?.id);
+
+  // phones get a closed-by-default drawer instead of a fixed sidebar
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const apply = () => {
+      setIsMobile(mq.matches);
+      setSidebarOpen(!mq.matches);
+    };
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  // close the drawer after navigating on mobile
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [pathname, isMobile]);
 
   // Listen for real-time notifications and online members updates
   useEffect(() => {
@@ -73,8 +92,14 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="app-shell">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div
+      className="app-shell"
+      style={{ '--ws-accent': currentWorkspace?.accentColor || '#4f46e5' }}
+    >
+      <Sidebar open={sidebarOpen} mobile={isMobile} onClose={() => setSidebarOpen(false)} />
+      {isMobile && sidebarOpen && (
+        <div className="drawer-backdrop" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+      )}
       <div className={`app-main ${sidebarOpen ? 'app-main--sidebar' : ''}`}>
         <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <main className="app-content">
@@ -100,6 +125,12 @@ export default function DashboardLayout({ children }) {
           flex: 1;
           overflow-y: auto;
           padding: 28px 32px;
+        }
+        .drawer-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 250;
+          background: rgba(16,24,40,0.4);
         }
         @media (max-width: 768px) {
           .app-content { padding: 16px; }

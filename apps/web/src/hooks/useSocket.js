@@ -1,76 +1,58 @@
 'use client';
 
 import { useEffect } from 'react';
-import { connectSocket, joinWorkspace, leaveWorkspace, attachSocketListeners, disconnectSocket } from '@/lib/socket';
+import { connectSocket, joinWorkspace, leaveWorkspace } from '@/lib/socket';
 import useAnnouncementStore from '@/stores/announcementStore';
 import useGoalStore from '@/stores/goalStore';
 import useActionStore from '@/stores/actionStore';
 import useNotificationStore from '@/stores/notificationStore';
 import useWorkspaceStore from '@/stores/workspaceStore';
 
-export function useSocket(workspaceId) {
-  const { socketAddAnnouncement, socketUpdateReaction, socketAddComment } = useAnnouncementStore();
-  const { socketUpdateGoal, socketAddUpdate } = useGoalStore();
-  const { socketUpdateItem } = useActionStore();
-  const { addNotification, setOnlineMembers, socketAddMember } = useNotificationStore();
-  const { socketAddMember: wsAddMember } = useWorkspaceStore();
+// Every event below is emitted by the API after a successful write.
+// Handlers read store actions via getState() so they never go stale.
+const handlers = {
+  'announcement:new': (a) => useAnnouncementStore.getState().socketAddAnnouncement(a),
+  'announcement:deleted': ({ announcementId }) =>
+    useAnnouncementStore.getState().socketRemoveAnnouncement(announcementId),
+  'announcement:pinned': ({ announcementId, pinned }) =>
+    useAnnouncementStore.getState().socketSetPinned(announcementId, pinned),
+  'reaction:updated': ({ announcementId, action, emoji, userId }) =>
+    useAnnouncementStore.getState().socketUpdateReaction(announcementId, action, emoji, userId),
+  'comment:new': ({ announcementId, comment }) =>
+    useAnnouncementStore.getState().socketAddComment(announcementId, comment),
 
+  'goal:created': (goal) => useGoalStore.getState().socketAddGoal(goal),
+  'goal:statusChanged': ({ goalId, status }) =>
+    useGoalStore.getState().socketUpdateGoal({ id: goalId, status }),
+  'goal:updatePosted': ({ goalId, update }) => useGoalStore.getState().socketAddUpdate(goalId, update),
+
+  'actionItem:created': (item) => useActionStore.getState().socketAddItem(item),
+  'actionItem:updated': (item) => useActionStore.getState().socketUpdateItem(item),
+  'actionItem:deleted': ({ actionItemId }) => useActionStore.getState().socketRemoveItem(actionItemId),
+
+  'members:online': ({ userIds }) => useNotificationStore.getState().setOnlineMembers(userIds),
+  'member:invited': (payload) => useWorkspaceStore.getState().socketAddMember(payload),
+  'workspace:updated': (ws) => useWorkspaceStore.getState().socketUpdateWorkspace(ws),
+
+  'notification:new': (n) => useNotificationStore.getState().addNotification(n),
+};
+
+export function useSocket(workspaceId) {
   useEffect(() => {
     if (!workspaceId) return;
 
     const socket = connectSocket();
 
-    const onConnect = () => {
-      joinWorkspace(workspaceId);
-    };
-
+    // (re)join the room on every connect, including automatic reconnects
+    const onConnect = () => joinWorkspace(workspaceId);
     socket.on('connect', onConnect);
-    // If already connected, join immediately
-    if (socket.connected) joinWorkspace(workspaceId);
+    if (socket.connected) onConnect();
 
-    const cleanup = attachSocketListeners({
-      onAnnouncementNew: (announcement) => {
-        socketAddAnnouncement(announcement);
-      },
-
-      onReactionUpdated: ({ announcementId, action, emoji, userId }) => {
-        socketUpdateReaction(announcementId, action, emoji, userId);
-      },
-
-      onCommentNew: ({ announcementId, comment }) => {
-        socketAddComment(announcementId, comment);
-      },
-
-      onGoalStatusChanged: ({ goalId, status }) => {
-        socketUpdateGoal({ id: goalId, status });
-      },
-
-      onGoalUpdatePosted: ({ goalId, update }) => {
-        socketAddUpdate(goalId, update);
-      },
-
-      // { actionItemId, status }
-      onActionItemStatusChanged: ({ actionItemId, status }) => {
-        socketUpdateItem({ id: actionItemId, status });
-      },
-
-      // { workspaceId, userIds }
-      onMembersOnline: ({ userIds }) => {
-        setOnlineMembers(userIds);
-      },
-
-      onMemberInvited: (member) => {
-        wsAddMember?.(member);
-      },
-
-      onNotificationNew: (notification) => {
-        addNotification(notification);
-      },
-    });
+    for (const [event, handler] of Object.entries(handlers)) socket.on(event, handler);
 
     return () => {
       socket.off('connect', onConnect);
-      cleanup();
+      for (const [event, handler] of Object.entries(handlers)) socket.off(event, handler);
       leaveWorkspace(workspaceId);
     };
   }, [workspaceId]);

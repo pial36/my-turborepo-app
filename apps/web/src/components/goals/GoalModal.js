@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import useGoalStore from '@/stores/goalStore';
 import useWorkspaceStore from '@/stores/workspaceStore';
+import useAuthStore from '@/stores/authStore';
 import toast from 'react-hot-toast';
 
 export default function GoalModal({ onClose, workspaceId }) {
   const { createGoal } = useGoalStore();
   const { currentWorkspace } = useWorkspaceStore();
-  const [form, setForm] = useState({ title: '', dueDate: '', status: 'NOT_STARTED' });
+  const { user } = useAuthStore();
+  const members = currentWorkspace?.members || [];
+  const [form, setForm] = useState({ title: '', dueDate: '', status: 'NOT_STARTED', ownerId: user?.id || '' });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,6 +23,7 @@ export default function GoalModal({ onClose, workspaceId }) {
       title: form.title.trim(),
       dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : undefined,
       status: form.status,
+      ownerId: form.ownerId ? Number(form.ownerId) : undefined,
     });
     setLoading(false);
     if (r.success) { toast.success('Goal created!'); onClose(); }
@@ -52,6 +56,16 @@ export default function GoalModal({ onClose, workspaceId }) {
               onChange={e => setForm({ ...form, dueDate: e.target.value })}
               className="input"
             />
+          </div>
+          <div className="field">
+            <label className="label">Owner</label>
+            <select value={form.ownerId} onChange={e => setForm({ ...form, ownerId: e.target.value })} className="input">
+              {members.map(m => (
+                <option key={m.userId} value={m.userId}>
+                  {m.user?.name}{m.userId === user?.id ? ' (you)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label className="label">Status</label>

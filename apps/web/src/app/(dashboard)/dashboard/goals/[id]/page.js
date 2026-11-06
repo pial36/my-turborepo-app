@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, Edit2, Trash2, CheckCircle, Circle, Send } from 'lucide-react';
 import useGoalStore from '@/stores/goalStore';
@@ -14,8 +14,9 @@ const STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'];
 export default function GoalDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { currentGoal, fetchGoal, updateGoal, updateGoalStatus, deleteGoal,
-          createMilestone, updateMilestone, deleteMilestone, postUpdate } = useGoalStore();
+  const { currentGoal, goalError, fetchGoal, updateGoal, updateGoalStatus, deleteGoal,
+          createMilestone, updateMilestone, setMilestoneProgressLocal, deleteMilestone, postUpdate } = useGoalStore();
+  const progressTimers = useRef({});
   const { currentWorkspace } = useWorkspaceStore();
   const { user } = useAuthStore();
   const [updateText, setUpdateText] = useState('');
@@ -28,11 +29,19 @@ export default function GoalDetailPage() {
     if (id) fetchGoal(parseInt(id));
   }, [id]);
 
-  if (!currentGoal) return (
+  // flush pending slider saves when leaving the page
+  useEffect(() => () => Object.values(progressTimers.current).forEach(clearTimeout), []);
+
+  if (!currentGoal || currentGoal.id !== parseInt(id)) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, color: '#98a2b3' }}>
-      Loading...
+      {goalError || 'Loading...'}
     </div>
   );
+
+  const members = currentWorkspace?.members || [];
+  const isAdmin = members.find(m => m.userId === user?.id)?.role === 'ADMIN';
+  // matches the API: only the owner or an admin can edit/delete a goal
+  const canEditGoal = isAdmin || currentGoal.ownerId === user?.id;
 
   const avgProgress = currentGoal.milestones?.length
     ? Math.round(currentGoal.milestones.reduce((a, m) => a + m.progress, 0) / currentGoal.milestones.length)
@@ -45,7 +54,8 @@ export default function GoalDetailPage() {
 
   const handleDelete = async () => {
     if (!confirm('Delete this goal?')) return;
-    await deleteGoal(currentGoal.id);
+    const r = await deleteGoal(currentGoal.id);
+    if (!r.success) return toast.error(r.error);
     toast.success('Goal deleted');
     router.push('/dashboard/goals');
   };
@@ -67,8 +77,15 @@ export default function GoalDetailPage() {
     else toast.error(r.error);
   };
 
-  const handleMilestoneProgress = async (milestoneId, progress) => {
-    await updateMilestone(milestoneId, { progress: parseInt(progress) });
+  // move the slider instantly; save once the user stops dragging
+  const handleMilestoneProgress = (milestoneId, progress) => {
+    const value = parseInt(progress);
+    setMilestoneProgressLocal(milestoneId, value);
+    clearTimeout(progressTimers.current[milestoneId]);
+    progressTimers.current[milestoneId] = setTimeout(async () => {
+      const r = await updateMilestone(milestoneId, { progress: value });
+      if (!r.success) toast.error(r.error);
+    }, 400);
   };
 
   return (
@@ -111,17 +128,38 @@ export default function GoalDetailPage() {
                 ) : (
                   <h2 className="detail-title">
                     {currentGoal.title}
-                    <button
-                      className="edit-title-btn"
-                      onClick={() => { setEditTitle(currentGoal.title); setEditingTitle(true); }}
-                      title="Edit goal name"
-                    >
-                      <Edit2 size={13} />
-                    </button>
+                    {canEditGoal && (
+                      <button
+                        className="edit-title-btn"
+                        onClick={() => { setEditTitle(currentGoal.title); setEditingTitle(true); }}
+                        title="Edit goal name"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                    )}
                   </h2>
                 )}
                 <div className="detail-meta">
-                  <span>Owner: <strong>{currentGoal.owner?.name}</strong></span>
+                  {canEditGoal ? (
+                    <label className="owner-select-label">
+                      Owner:{' '}
+                      <select
+                        className="owner-select"
+                        value={currentGoal.ownerId}
+                        onChange={async (e) => {
+                          const r = await updateGoal(currentGoal.id, { ownerId: Number(e.target.value) });
+                          if (r.success) toast.success('Owner updated');
+                          else toast.error(r.error);
+                        }}
+                      >
+                        {members.map(m => (
+                          <option key={m.userId} value={m.userId}>{m.user?.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <span>Owner: <strong>{currentGoal.owner?.name}</strong></span>
+                  )}
                   {currentGoal.dueDate && <span>Due: <strong>{formatDate(currentGoal.dueDate)}</strong></span>}
                 </div>
               </div>
@@ -133,9 +171,11 @@ export default function GoalDetailPage() {
                 >
                   {STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                 </select>
-                <button className="icon-btn icon-btn--danger" onClick={handleDelete}>
-                  <Trash2 size={15} />
-                </button>
+                {canEditGoal && (
+                  <button className="icon-btn icon-btn--danger" onClick={handleDelete} title="Delete goal">
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -306,7 +346,8 @@ export default function GoalDetailPage() {
           font-family: var(--font-sans); white-space: nowrap;
         }
         .btn-ghost-sm:hover { background: #f8f9fb; }
-        .detail-meta { display: flex; gap: 16px; font-size: 13px; color: #6b7280; }
+        .detail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
+        .owner-select { font-size: 13px; font-weight: 600; color: #101828; border: 1px solid #e4e7ec; border-radius: 6px; padding: 2px 6px; background: #fff; font-family: var(--font-sans); }
         .detail-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .status-select {
           height: 34px; padding: 0 10px; font-size: 12.5px;

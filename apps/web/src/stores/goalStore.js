@@ -1,27 +1,39 @@
 import { create } from 'zustand';
 import api from '@/lib/api';
 
+// socket events echo back to the sender, so adds must be idempotent
+const prependUnique = (list = [], item) =>
+  list.some((x) => x.id === item.id) ? list : [item, ...list];
+
 const useGoalStore = create((set) => ({
   goals: [],
   currentGoal: null,
+  goalError: null,
   isLoading: false,
+  error: null,
 
   fetchGoals: async (workspaceId) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null, goals: [] });
     try {
       const res = await api.get(`/api/goals/workspace/${workspaceId}`);
       set({ goals: res.data.data || [], isLoading: false });
-    } catch (_) {
-      set({ isLoading: false });
+    } catch (err) {
+      set({ isLoading: false, error: err.response?.data?.message || 'Failed to load goals' });
     }
   },
 
   fetchGoal: async (goalId) => {
+    // drop the previous goal so goal A never renders while B loads
+    set((state) => ({
+      goalError: null,
+      currentGoal: state.currentGoal?.id === Number(goalId) ? state.currentGoal : null,
+    }));
     try {
       const res = await api.get(`/api/goals/${goalId}`);
       set({ currentGoal: res.data.data });
       return res.data.data;
-    } catch (_) {
+    } catch (err) {
+      set({ goalError: err.response?.data?.message || 'Failed to load goal' });
       return null;
     }
   },
@@ -30,7 +42,7 @@ const useGoalStore = create((set) => ({
     try {
       const res = await api.post(`/api/goals/workspace/${workspaceId}`, data);
       const goal = res.data.data;
-      set((state) => ({ goals: [goal, ...state.goals] }));
+      set((state) => ({ goals: prependUnique(state.goals, goal) }));
       return { success: true, goal };
     } catch (err) {
       return { success: false, error: err.response?.data?.message || 'Failed to create goal' };
@@ -42,7 +54,7 @@ const useGoalStore = create((set) => ({
       const res = await api.put(`/api/goals/${goalId}`, data);
       const goal = res.data.data;
       set((state) => ({
-        goals: state.goals.map((g) => (g.id === goalId ? goal : g)),
+        goals: state.goals.map((g) => (g.id === goalId ? { ...g, ...goal } : g)),
         currentGoal: state.currentGoal?.id === goalId ? goal : state.currentGoal,
       }));
       return { success: true };
@@ -56,7 +68,7 @@ const useGoalStore = create((set) => ({
       const res = await api.put(`/api/goals/status/${goalId}`, { status });
       const goal = res.data.data;
       set((state) => ({
-        goals: state.goals.map((g) => (g.id === goalId ? goal : g)),
+        goals: state.goals.map((g) => (g.id === goalId ? { ...g, ...goal } : g)),
         currentGoal: state.currentGoal?.id === goalId ? goal : state.currentGoal,
       }));
       return { success: true };
@@ -110,6 +122,20 @@ const useGoalStore = create((set) => ({
     }
   },
 
+  // instant slider feedback; the page saves with updateMilestone after a pause
+  setMilestoneProgressLocal: (milestoneId, progress) => {
+    set((state) => ({
+      currentGoal: state.currentGoal
+        ? {
+            ...state.currentGoal,
+            milestones: state.currentGoal.milestones?.map((m) =>
+              m.id === milestoneId ? { ...m, progress } : m
+            ),
+          }
+        : null,
+    }));
+  },
+
   deleteMilestone: async (milestoneId) => {
     try {
       await api.delete(`/api/goals/milestones/${milestoneId}`);
@@ -133,7 +159,7 @@ const useGoalStore = create((set) => ({
       const update = res.data.data;
       set((state) => ({
         currentGoal: state.currentGoal?.id === goalId
-          ? { ...state.currentGoal, updates: [update, ...(state.currentGoal.updates || [])] }
+          ? { ...state.currentGoal, updates: prependUnique(state.currentGoal.updates, update) }
           : state.currentGoal,
       }));
       return { success: true, update };
@@ -151,13 +177,13 @@ const useGoalStore = create((set) => ({
   },
 
   socketAddGoal: (goal) => {
-    set((state) => ({ goals: [goal, ...state.goals] }));
+    set((state) => ({ goals: prependUnique(state.goals, goal) }));
   },
 
   socketAddUpdate: (goalId, update) => {
     set((state) => ({
       currentGoal: state.currentGoal?.id === goalId
-        ? { ...state.currentGoal, updates: [update, ...(state.currentGoal.updates || [])] }
+        ? { ...state.currentGoal, updates: prependUnique(state.currentGoal.updates, update) }
         : state.currentGoal,
     }));
   },

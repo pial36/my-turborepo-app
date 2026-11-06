@@ -31,11 +31,16 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentWorkspace?.id) return;
+    // no workspace yet → nothing to load (don't spin forever)
+    if (!currentWorkspace?.id) { setLoading(false); return; }
+    let cancelled = false;
     setLoading(true);
+    setStats(null);
     api.get(`/api/analytics/${currentWorkspace.id}`)
-      .then(r => { setStats(r.data.data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(r => { if (!cancelled) setStats(r.data.data); })
+      .catch(() => { if (!cancelled) toast.error('Failed to load analytics'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [currentWorkspace?.id]);
 
   const handleExport = async () => {
@@ -97,7 +102,9 @@ export default function AnalyticsPage() {
               <div className="stat-icon stat-icon--red"><AlertTriangle size={20} /></div>
               <div>
                 <div className="stat-num">{stats?.overdueCount ?? 0}</div>
-                <div className="stat-label">Overdue Goals</div>
+                <div className="stat-label">
+                  Overdue ({stats?.overdueGoals ?? 0} goals · {stats?.overdueActionItems ?? 0} items)
+                </div>
               </div>
             </div>
             <div className="stat-card">

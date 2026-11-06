@@ -9,15 +9,24 @@ import useAuthStore from '@/stores/authStore';
 import api from '@/lib/api';
 import { formatRelativeTime, getInitials } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import { AUDIT_ACTIONS } from '@teamhub/shared';
 
-const ACTION_TYPES = ['ALL', 'WORKSPACE_CREATED', 'WORKSPACE_UPDATED', 'MEMBER_INVITED',
-  'GOAL_CREATED', 'GOAL_UPDATED', 'GOAL_DELETED', 'ANNOUNCEMENT_CREATED',
-  'ANNOUNCEMENT_DELETED', 'ACTION_ITEM_CREATED', 'ACTION_ITEM_UPDATED'];
+// every action the API writes, from the shared package
+const ACTION_TYPES = ['ALL', ...AUDIT_ACTIONS];
 
 const ACTION_COLORS = {
   WORKSPACE_CREATED: 'text-purple-600 bg-purple-50',
   WORKSPACE_UPDATED: 'text-purple-600 bg-purple-50',
   MEMBER_INVITED: 'text-blue-600 bg-blue-50',
+  INVITE_SENT: 'text-blue-600 bg-blue-50',
+  MEMBER_ROLE_CHANGED: 'text-orange-600 bg-orange-50',
+  MEMBER_PERMISSIONS_CHANGED: 'text-orange-600 bg-orange-50',
+  MEMBER_REMOVED: 'text-red-600 bg-red-50',
+  GOAL_STATUS_CHANGED: 'text-yellow-600 bg-yellow-50',
+  ANNOUNCEMENT_PINNED: 'text-indigo-600 bg-indigo-50',
+  ANNOUNCEMENT_UNPINNED: 'text-indigo-600 bg-indigo-50',
+  ACTION_ITEM_STATUS_CHANGED: 'text-yellow-600 bg-yellow-50',
+  ACTION_ITEM_DELETED: 'text-red-600 bg-red-50',
   GOAL_CREATED: 'text-green-600 bg-green-50',
   GOAL_UPDATED: 'text-yellow-600 bg-yellow-50',
   GOAL_DELETED: 'text-red-600 bg-red-50',
@@ -36,25 +45,31 @@ export default function AuditLogPage() {
 
   const isAdmin = currentWorkspace?.members?.find(m => m.userId === user?.id)?.role === 'ADMIN';
 
+  // same query for the timeline and the CSV export
+  const filterParams = () => {
+    const params = new URLSearchParams();
+    if (filters.action) params.set('action', filters.action);
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    return params;
+  };
+
   const fetchLogs = async () => {
-    if (!currentWorkspace?.id) return;
+    // members can't read the log; don't fire a request that will 403
+    if (!currentWorkspace?.id || !isAdmin) { setLoading(false); return; }
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters.action) params.set('action', filters.action);
-      if (filters.from) params.set('from', filters.from);
-      if (filters.to) params.set('to', filters.to);
-      const r = await api.get(`/api/audit-logs/${currentWorkspace.id}?${params}`);
+      const r = await api.get(`/api/audit-logs/${currentWorkspace.id}?${filterParams()}`);
       setLogs(r.data.data || []);
     } catch { toast.error('Failed to load audit logs'); }
     setLoading(false);
   };
 
-  useEffect(() => { fetchLogs(); }, [currentWorkspace?.id]);
+  useEffect(() => { fetchLogs(); }, [currentWorkspace?.id, isAdmin]);
 
   const handleExport = async () => {
     try {
-      const res = await api.get(`/api/audit-logs/${currentWorkspace.id}/export`, { responseType: 'blob' });
+      const res = await api.get(`/api/audit-logs/${currentWorkspace.id}/export?${filterParams()}`, { responseType: 'blob' });
       const url = URL.createObjectURL(new Blob([res.data]));
       const a = document.createElement('a');
       a.href = url; a.download = 'audit-log.csv';

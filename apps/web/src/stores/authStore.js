@@ -2,6 +2,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/lib/api';
+import { disconnectSocket } from '@/lib/socket';
+import useWorkspaceStore from '@/stores/workspaceStore';
 
 const useAuthStore = create(
   persist(
@@ -41,6 +43,9 @@ const useAuthStore = create(
           await api.post('/api/auth/logout');
         } catch (_) {}
         set({ user: null, isAuthenticated: false });
+        // don't let the next person on this browser inherit our workspace
+        useWorkspaceStore.getState().reset();
+        disconnectSocket();
         window.location.href = '/login';
       },
 

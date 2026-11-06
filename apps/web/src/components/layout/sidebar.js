@@ -22,7 +22,7 @@ const NAV = [
   { href: '/dashboard/audit-log', icon: Shield, label: 'Audit Log', adminOnly: true },
 ];
 
-export default function Sidebar({ open }) {
+export default function Sidebar({ open, mobile = false }) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { workspaces, currentWorkspace, switchWorkspace, createWorkspace } = useWorkspaceStore();
@@ -46,7 +46,7 @@ export default function Sidebar({ open }) {
   if (!open) return null;
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${mobile ? 'sidebar--drawer' : ''}`}>
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-logo">
@@ -174,6 +174,14 @@ export default function Sidebar({ open }) {
           height: 100vh;
           overflow-y: auto;
         }
+        /* phones: slide-over drawer above the content */
+        .sidebar--drawer {
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 300;
+          box-shadow: 0 20px 48px rgba(16,24,40,0.24);
+        }
         .sidebar-brand {
           display: flex;
           align-items: center;
@@ -184,7 +192,8 @@ export default function Sidebar({ open }) {
         .sidebar-logo {
           width: 32px;
           height: 32px;
-          background: #4f46e5;
+          /* --ws-accent is the current workspace accent colour (set in dashboard layout) */
+          background: var(--ws-accent, #4f46e5);
           border-radius: 8px;
           display: flex;
           align-items: center;
@@ -347,8 +356,8 @@ export default function Sidebar({ open }) {
         }
         .nav-item:hover { background: #f8f9fb; color: #101828; }
         .nav-item--active {
-          background: #eef2ff;
-          color: #4f46e5;
+          background: color-mix(in srgb, var(--ws-accent, #4f46e5) 12%, #fff);
+          color: var(--ws-accent, #4f46e5);
           font-weight: 600;
         }
 

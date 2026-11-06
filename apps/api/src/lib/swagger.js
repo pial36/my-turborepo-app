@@ -1,4 +1,5 @@
 const swaggerJsdoc = require('swagger-jsdoc')
+const extraPaths = require('./openapiPaths')
 
 const options = {
   definition: {
@@ -8,14 +9,10 @@ const options = {
       version: '1.0.0',
       description: 'Collaborative Team Hub REST API'
     },
-    servers: [
-      {
-        url: process.env.NODE_ENV === 'production'
-          ? process.env.API_URL
-          : 'http://localhost:5000',
-        description: process.env.NODE_ENV === 'production' ? 'Production' : 'Development'
-      }
-    ],
+    // relative, so 'Try it out' calls whichever host is serving the docs
+    servers: [{ url: '/' }],
+    // every route except register/login uses the httpOnly accessToken cookie
+    security: [{ cookieAuth: [] }],
     components: {
       securitySchemes: {
         cookieAuth: {
@@ -86,11 +83,23 @@ const options = {
             message: { type: 'string' }
           }
         }
+      },
+      responses: {
+        Error: {
+          description: 'Error',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } }
+        }
       }
     }
   },
   // scan all route files for JSDoc comments
-  apis: ['./src/routes/*.js']
+  // absolute so docs work no matter which directory the process starts in
+  apis: [require('path').join(__dirname, '../routes/*.js')]
 }
 
-module.exports = swaggerJsdoc(options)
+const spec = swaggerJsdoc(options)
+
+// JSDoc-documented routes win over the central definitions
+spec.paths = { ...extraPaths, ...spec.paths }
+
+module.exports = spec

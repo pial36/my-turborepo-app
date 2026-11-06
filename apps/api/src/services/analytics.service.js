@@ -1,16 +1,24 @@
 const  prisma  = require('../lib/prisma')
+const { toCsv } = require('../lib/csv')
+
+// Monday 00:00 of the current week
+const startOfWeek = (now = new Date()) => {
+  const start = new Date(now)
+  const daysSinceMonday = (now.getDay() + 6) % 7
+  start.setDate(now.getDate() - daysSinceMonday)
+  start.setHours(0, 0, 0, 0)
+  return start
+}
 
 const getWorkspaceStats = async (workspaceId) => {
   const now = new Date()
-  const startOfWeek = new Date()
-  startOfWeek.setDate(now.getDate() - now.getDay())  // Sunday
-  startOfWeek.setHours(0, 0, 0, 0)
 
   // run all queries in parallel for performance
   const [
     totalGoals,
     completedThisWeek,
-    overdueCount,
+    overdueGoals,
+    overdueActionItems,
     goalsByStatus,
     totalActionItems,
     completedActionItems
@@ -18,22 +26,19 @@ const getWorkspaceStats = async (workspaceId) => {
     // total goals in workspace
     prisma.goal.count({ where: { workspaceId } }),
 
-    // action items completed this week
+    // action items marked DONE since Monday (completedAt is set on status change)
     prisma.actionItem.count({
-      where: {
-        goal: { workspaceId },
-        status: 'DONE',
-        createdAt: { gte: startOfWeek }
-      }
+      where: { workspaceId, status: 'DONE', completedAt: { gte: startOfWeek(now) } }
     }),
 
     // overdue goals (past due date, not completed)
     prisma.goal.count({
-      where: {
-        workspaceId,
-        dueDate: { lt: now },
-        status: { not: 'COMPLETED' }
-      }
+      where: { workspaceId, dueDate: { lt: now }, status: { not: 'COMPLETED' } }
+    }),
+
+    // overdue action items (past due date, not done)
+    prisma.actionItem.count({
+      where: { workspaceId, dueDate: { lt: now }, status: { not: 'DONE' } }
     }),
 
     // goals grouped by status — for Recharts chart
@@ -43,57 +48,72 @@ const getWorkspaceStats = async (workspaceId) => {
       _count: { status: true }
     }),
 
-    // total action items
-    prisma.actionItem.count({
-      where: { goal: { workspaceId } }
-    }),
+    prisma.actionItem.count({ where: { workspaceId } }),
 
-    // completed action items
-    prisma.actionItem.count({
-      where: { goal: { workspaceId }, status: 'DONE' }
-    })
+    prisma.actionItem.count({ where: { workspaceId, status: 'DONE' } })
   ])
 
   return {
     totalGoals,
     completedThisWeek,
-    overdueCount,
+    overdueCount: overdueGoals + overdueActionItems,
+    overdueGoals,
+    overdueActionItems,
     goalsByStatus,                   // array → feed into Recharts
     totalActionItems,
     completedActionItems
   }
 }
 
-// CSV export — workspace data
+// CSV export — goals and action items in one file, two sections
 const exportWorkspaceCSV = async (workspaceId) => {
   const [goals, actionItems] = await Promise.all([
     prisma.goal.findMany({
       where: { workspaceId },
       include: {
         owner: { select: { name: true } },
-        milestones: true
-      }
+        milestones: { select: { progress: true } }
+      },
+      orderBy: { createdAt: 'asc' }
     }),
     prisma.actionItem.findMany({
-      where: { goal: { workspaceId } },
+      where: { workspaceId },
       include: {
         assignee: { select: { name: true } },
         goal: { select: { title: true } }
-      }
+      },
+      orderBy: { createdAt: 'asc' }
     })
   ])
 
-  // format as CSV rows
-  const goalRows = goals.map(g =>
-    `${g.id},${g.title},${g.status},${g.owner.name},${g.dueDate ?? ''},${g.milestones.length}`
+  const goalCSV = toCsv(
+    ['ID', 'Title', 'Status', 'Owner', 'DueDate', 'Milestones', 'AvgProgress'],
+    goals.map((g) => [
+      g.id,
+      g.title,
+      g.status,
+      g.owner?.name,
+      g.dueDate,
+      g.milestones.length,
+      g.milestones.length
+        ? Math.round(g.milestones.reduce((sum, m) => sum + m.progress, 0) / g.milestones.length)
+        : ''
+    ])
   )
 
-  const actionRows = actionItems.map(a =>
-    `${a.id},${a.title},${a.status},${a.priority},${a.assignee.name},${a.goal.title},${a.dueDate ?? ''}`
+  const actionCSV = toCsv(
+    ['ID', 'Title', 'Status', 'Priority', 'Assignee', 'Goal', 'DueDate', 'CompletedAt'],
+    actionItems.map((a) => [
+      a.id,
+      a.title,
+      a.status,
+      a.priority,
+      a.assignee?.name,
+      a.goal?.title,
+      a.dueDate,
+      a.completedAt
+    ])
   )
-
-  const goalCSV = ['ID,Title,Status,Owner,DueDate,Milestones', ...goalRows].join('\n')
-  const actionCSV = ['ID,Title,Status,Priority,Assignee,Goal,DueDate', ...actionRows].join('\n')
 
   return { goalCSV, actionCSV }
 }

@@ -22,17 +22,23 @@ const generateTokens = (user) => {
   return { accessToken, refreshToken }
 }
 
+// Web and API run on different domains in production (separate Railway
+// services), so cookies must be SameSite=None + Secure to be sent cross-site.
+const isProd = process.env.NODE_ENV === 'production'
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax',
+  path: '/'
+}
+
 const setTokenCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    ...cookieOptions,
     maxAge: 15 * 60 * 1000
   })
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    ...cookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000
   })
 }
@@ -156,8 +162,8 @@ router.post('/refresh', async (req, res) => {
 
 // POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('accessToken')
-  res.clearCookie('refreshToken')
+  res.clearCookie('accessToken', cookieOptions)
+  res.clearCookie('refreshToken', cookieOptions)
   res.json({ success: true, message: 'Logged out' })
 })
 
@@ -198,7 +204,10 @@ router.get('/me', protect, async (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', protect, async (req, res) => {
   try {
-    const user = await authService.updateProfile(req.user.id, req.body)
+    // only the display name is editable here; email/password/avatar have their own flows
+    const name = String(req.body?.name || '').trim()
+    if (!name) return res.status(400).json({ success: false, message: 'Name is required' })
+    const user = await authService.updateProfile(req.user.id, { name })
     res.json({ success: true, data: user })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })

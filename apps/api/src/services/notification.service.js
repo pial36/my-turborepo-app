@@ -7,11 +7,13 @@ const getUserNotifications = async (userId) => {
   })
 }
 
-const markAsRead = async (notificationId) => {
-  return prisma.notification.update({
-    where: { id: notificationId },
+// scoped by userId so users can only touch their own notifications
+const markAsRead = async (notificationId, userId) => {
+  const { count } = await prisma.notification.updateMany({
+    where: { id: notificationId, userId },
     data: { read: true }
   })
+  return count > 0
 }
 
 const markAllAsRead = async (userId) => {
@@ -21,8 +23,11 @@ const markAllAsRead = async (userId) => {
   })
 }
 
-const deleteNotification = async (notificationId) => {
-  return prisma.notification.delete({ where: { id: notificationId } })
+const deleteNotification = async (notificationId, userId) => {
+  const { count } = await prisma.notification.deleteMany({
+    where: { id: notificationId, userId }
+  })
+  return count > 0
 }
 
 module.exports = {

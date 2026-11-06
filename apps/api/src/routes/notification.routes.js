@@ -15,8 +15,9 @@ router.get('/', protect, async (req, res) => {
 // PUT /api/notifications/:id/read
 router.put('/:id/read', protect, async (req, res) => {
   try {
-    const notification = await notificationService.markAsRead(parseInt(req.params.id))
-    res.json({ success: true, data: notification })
+    const found = await notificationService.markAsRead(parseInt(req.params.id), req.user.id)
+    if (!found) return res.status(404).json({ success: false, message: 'Notification not found' })
+    res.json({ success: true, data: { id: parseInt(req.params.id), read: true } })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   }
@@ -35,7 +36,8 @@ router.put('/read-all', protect, async (req, res) => {
 // DELETE /api/notifications/:id
 router.delete('/:id', protect, async (req, res) => {
   try {
-    await notificationService.deleteNotification(parseInt(req.params.id))
+    const found = await notificationService.deleteNotification(parseInt(req.params.id), req.user.id)
+    if (!found) return res.status(404).json({ success: false, message: 'Notification not found' })
     res.json({ success: true, message: 'Notification deleted' })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })

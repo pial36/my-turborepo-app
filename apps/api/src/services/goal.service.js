@@ -49,7 +49,11 @@ const getGoalById = async (goalId) => {
 const updateGoal = async (goalId, data) => {
   return prisma.goal.update({
     where: { id: goalId },
-    data
+    data,
+    include: {
+      owner: { select: { id: true, name: true, avatar: true } },
+      milestones: true
+    }
   })
 }
 

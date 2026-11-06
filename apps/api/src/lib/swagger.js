@@ -90,7 +90,8 @@ const options = {
     }
   },
   // scan all route files for JSDoc comments
-  apis: ['./src/routes/*.js']
+  // absolute so docs work no matter which directory the process starts in
+  apis: [require('path').join(__dirname, '../routes/*.js')]
 }
 
 module.exports = swaggerJsdoc(options)

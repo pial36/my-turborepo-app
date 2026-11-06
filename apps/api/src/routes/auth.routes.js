@@ -204,7 +204,10 @@ router.get('/me', protect, async (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', protect, async (req, res) => {
   try {
-    const user = await authService.updateProfile(req.user.id, req.body)
+    // only the display name is editable here; email/password/avatar have their own flows
+    const name = String(req.body?.name || '').trim()
+    if (!name) return res.status(400).json({ success: false, message: 'Name is required' })
+    const user = await authService.updateProfile(req.user.id, { name })
     res.json({ success: true, data: user })
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })

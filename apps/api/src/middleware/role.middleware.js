@@ -20,68 +20,10 @@ const getMember = async (req) => {
   })
 }
 
-// 🔹 helper: get workspace member for announcement routes (where :id is announcement ID)
-const getMemberForAnnouncement = async (req) => {
-  const announcementId = parseInt(req.params.id)
-  const userId = req.user.id
-
-  if (!announcementId || !userId) return null
-
-  // First get the announcement to find its workspace
-  const announcement = await prisma.announcement.findUnique({
-    where: { id: announcementId },
-    select: { workspaceId: true }
-  })
-
-  if (!announcement) return null
-
-  // Now get the member for that workspace
-  return prisma.workspaceMember.findUnique({
-    where: {
-      userId_workspaceId: {
-        userId,
-        workspaceId: announcement.workspaceId
-      }
-    }
-  })
-}
-
 // 🔹 role-based access (ADMIN / MEMBER)
 const requireRole = (role) => async (req, res, next) => {
   try {
     const member = await getMember(req)
-
-    if (!member) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not a member of this workspace'
-      })
-    }
-
-    if (role === 'ADMIN' && member.role !== 'ADMIN') {
-      return res.status(403).json({
-        success: false,
-        message: 'Admin access required'
-      })
-    }
-
-    // attach useful data to request
-    req.userRole = member.role
-    req.permissions = member
-
-    next()
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    })
-  }
-}
-
-// 🔹 role-based access for announcement routes (where :id is announcement ID)
-const requireRoleForAnnouncement = (role) => async (req, res, next) => {
-  try {
-    const member = await getMemberForAnnouncement(req)
 
     if (!member) {
       return res.status(403).json({
@@ -149,72 +91,76 @@ const requirePermission = (permission) => async (req, res, next) => {
   }
 }
 
-// 🔹 check if user can edit/delete action item (admin or creator only)
-const requireActionItemOwnerOrAdmin = async (req, res, next) => {
-  try {
-    const actionItemId = parseInt(req.params.id)
-    const userId = req.user.id
-
-    if (!actionItemId || !userId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid action item ID'
-      })
-    }
-
-    // Get the action item
-    const actionItem = await prisma.actionItem.findUnique({
-      where: { id: actionItemId },
-      select: { createdById: true, workspaceId: true }
+// 🔹 resource id → { workspaceId, ...ownership fields }
+// lets routes keyed by a resource id (/goals/:id) check workspace membership
+const resourceLookups = {
+  goal: (id) => prisma.goal.findUnique({
+    where: { id },
+    select: { workspaceId: true, ownerId: true }
+  }),
+  milestone: async (id) => {
+    const m = await prisma.milestone.findUnique({
+      where: { id },
+      select: { goal: { select: { workspaceId: true, ownerId: true } } }
     })
+    return m && m.goal
+  },
+  announcement: (id) => prisma.announcement.findUnique({
+    where: { id },
+    select: { workspaceId: true, authorId: true }
+  }),
+  actionItem: (id) => prisma.actionItem.findUnique({
+    where: { id },
+    select: { workspaceId: true, createdById: true, assigneeId: true }
+  })
+}
 
-    if (!actionItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Action item not found'
-      })
+// 🔹 caller must be a member of the workspace that owns the resource
+// sets req.resource, req.workspaceId, req.userRole, req.permissions
+const requireResourceMember = (kind, param = 'id') => async (req, res, next) => {
+  try {
+    const id = parseInt(req.params[param])
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Invalid id' })
     }
 
-    // Get user's role in workspace
+    const resource = await resourceLookups[kind](id)
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Not found' })
+    }
+
     const member = await prisma.workspaceMember.findUnique({
       where: {
-        userId_workspaceId: {
-          userId,
-          workspaceId: actionItem.workspaceId
-        }
+        userId_workspaceId: { userId: req.user.id, workspaceId: resource.workspaceId }
       }
     })
-
     if (!member) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not a member of this workspace'
-      })
+      return res.status(403).json({ success: false, message: 'Not a member of this workspace' })
     }
 
-    // Allow if admin OR if user is the creator
-    if (member.role !== 'ADMIN' && actionItem.createdById !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: 'You can only edit/delete action items you created, or you must be an admin'
-      })
-    }
-
+    req.resource = resource
+    req.workspaceId = resource.workspaceId
     req.userRole = member.role
     req.permissions = member
-
     next()
   } catch (err) {
-    res.status(500).json({
-      success: false,
-      message: err.message
-    })
+    res.status(500).json({ success: false, message: err.message })
   }
+}
+
+// 🔹 true if userId belongs to the workspace (used to validate owner/assignee ids)
+const isWorkspaceMember = async (workspaceId, userId) => {
+  if (!userId) return false
+  const member = await prisma.workspaceMember.findUnique({
+    where: { userId_workspaceId: { userId, workspaceId } },
+    select: { id: true }
+  })
+  return !!member
 }
 
 module.exports = {
   requireRole,
-  requireRoleForAnnouncement,
   requirePermission,
-  requireActionItemOwnerOrAdmin
+  requireResourceMember,
+  isWorkspaceMember
 }

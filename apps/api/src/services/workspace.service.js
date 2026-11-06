@@ -85,22 +85,57 @@ const deleteWorkspace = async (workspaceId) => {
   })
 }
 
-// invite by email — finds user then adds them
-const inviteMember = async ({ workspaceId, email }) => {
-  const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) throw new Error('No user found with that email')
+// invite by email
+// - existing user → added as MEMBER right away   → { member }
+// - unknown email → pending WorkspaceInvite, accepted on register → { invite }
+const inviteMember = async ({ workspaceId, email, invitedById }) => {
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: 'insensitive' } }
+  })
+
+  if (!user) {
+    const pending = await prisma.workspaceInvite.findUnique({
+      where: { email_workspaceId: { email, workspaceId } }
+    })
+    if (pending) throw new Error('An invite is already pending for that email')
+
+    const invite = await prisma.workspaceInvite.create({
+      data: { email, workspaceId, invitedById }
+    })
+    return { invite }
+  }
 
   const existing = await prisma.workspaceMember.findUnique({
     where: { userId_workspaceId: { userId: user.id, workspaceId } }
   })
   if (existing) throw new Error('User is already a member')
 
-  return prisma.workspaceMember.create({
+  const member = await prisma.workspaceMember.create({
     data: { userId: user.id, workspaceId, role: 'MEMBER' },
     include: {
       user: { select: { id: true, name: true, email: true, avatar: true } }
     }
   })
+  return { member }
+}
+
+const getPendingInvites = async (workspaceId) => {
+  return prisma.workspaceInvite.findMany({
+    where: { workspaceId },
+    select: { id: true, email: true, createdAt: true },
+    orderBy: { createdAt: 'desc' }
+  })
+}
+
+const cancelInvite = async ({ workspaceId, inviteId }) => {
+  const { count } = await prisma.workspaceInvite.deleteMany({
+    where: { id: inviteId, workspaceId }
+  })
+  return count > 0
+}
+
+const countAdmins = async (workspaceId) => {
+  return prisma.workspaceMember.count({ where: { workspaceId, role: 'ADMIN' } })
 }
 
 const updateMemberRole = async ({ workspaceId, userId, role }) => {
@@ -145,6 +180,11 @@ module.exports = {
   updateWorkspace,
   deleteWorkspace,
   inviteMember,
-  updateMemberRole,  updateMemberPermissions,  removeMember,
+  getPendingInvites,
+  cancelInvite,
+  countAdmins,
+  updateMemberRole,
+  updateMemberPermissions,
+  removeMember,
   getMemberRole
 }

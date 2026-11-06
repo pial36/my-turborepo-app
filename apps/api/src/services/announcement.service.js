@@ -1,10 +1,11 @@
 const prisma = require('../lib/prisma')
 const { sendMail } = require('../lib/mailer')
 const { mentionTemplate } = require('../lib/emailTemplates')
+const { sanitizeRichText } = require('../lib/sanitize')
 
 const createAnnouncement = async ({ content, workspaceId, authorId }) => {
   return prisma.announcement.create({
-    data: { content, workspaceId, authorId },
+    data: { content: sanitizeRichText(content), workspaceId, authorId },
     include: {
       author: { select: { id: true, name: true, avatar: true } },
       reactions: true,
@@ -74,15 +75,12 @@ const toggleReaction = async ({ announcementId, userId, emoji }) => {
 
 /*
   HOW @MENTION MATCHING WORKS:
-  - User types @RaiyaChowdhury in the comment box (frontend strips spaces)
-  - The regex extracts "RaiyaChowdhury" from @RaiyaChowdhury
-  - We fetch ALL workspace members and compare:
-      "Raiya Chowdhury".replace(/\s+/g,'').toLowerCase()
-      === "raiyachowdhury"
-      === "RaiyaChowdhury".toLowerCase()
-  - This way spaces in real names are handled correctly
+  - User types @JaneSmith in the comment box (frontend strips spaces from names)
+  - The regex extracts "JaneSmith"
+  - It is compared against members of THIS workspace with spaces removed:
+      "Jane Smith" -> "janesmith" === "janesmith"
 */
-const addComment = async ({ announcementId, authorId, content, workspaceName }) => {
+const addComment = async ({ announcementId, workspaceId, authorId, content, workspaceName }) => {
   const comment = await prisma.comment.create({
     data: { announcementId, authorId, content },
     include: {
@@ -90,52 +88,41 @@ const addComment = async ({ announcementId, authorId, content, workspaceName }) 
     }
   })
 
-  const mentions = content.match(/@(\w+)/g) || []
-  const mentionedNotifications = []
+  const handles = [...new Set((content.match(/@(\w+)/g) || []).map(m => m.slice(1).toLowerCase()))]
+  if (handles.length === 0) return { comment, mentionedNotifications: [] }
 
-  if (mentions.length > 0) {
-    // Fetch all users ONCE — avoid N+1 and avoid exact-name matching failure
-    const allUsers = await prisma.user.findMany({
-      select: { id: true, name: true, email: true }
-    })
+  // only members of this workspace can be mentioned
+  const members = await prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    select: { user: { select: { id: true, name: true, email: true } } }
+  })
 
-    for (const mention of mentions) {
-      const handle = mention.slice(1).toLowerCase() // "RaiyaChowdhury" -> "raiyachowdhury"
+  const mentioned = members
+    .map(m => m.user)
+    .filter(u => u.id !== authorId && handles.includes(u.name.replace(/\s+/g, '').toLowerCase()))
 
-      // KEY FIX: strip spaces from DB name before comparing
-      // "Raiya Chowdhury" -> "raiyachowdhury" === "raiyachowdhury" ✅
-      const mentioned = allUsers.find(u =>
-        u.name.replace(/\s+/g, '').toLowerCase() === handle
-      )
-
-      if (mentioned && mentioned.id !== authorId) {
-        // Save notification to DB
-        const notification = await prisma.notification.create({
-          data: {
-            userId: mentioned.id,
-            type: 'MENTION',
-            message: `${comment.author.name} mentioned you in a comment`
-          }
-        })
-        mentionedNotifications.push(notification)
-
-        // Email (non-blocking)
-        try {
-          await sendMail({
-            to: mentioned.email,
-            subject: `${comment.author.name} mentioned you in ${workspaceName || 'your workspace'}`,
-            html: mentionTemplate({
-              mentionerName: comment.author.name,
-              workspaceName: workspaceName || 'your workspace',
-              commentContent: content,
-              appUrl: process.env.CLIENT_URL
-            })
-          })
-        } catch (emailErr) {
-          console.warn(`Email failed for @mention to ${mentioned.email}:`, emailErr.message)
-        }
+  const mentionedNotifications = await Promise.all(mentioned.map(user =>
+    prisma.notification.create({
+      data: {
+        userId: user.id,
+        type: 'MENTION',
+        message: `${comment.author.name} mentioned you in a comment`
       }
-    }
+    })
+  ))
+
+  // emails are fire-and-forget so a slow SMTP server never delays the response
+  for (const user of mentioned) {
+    sendMail({
+      to: user.email,
+      subject: `${comment.author.name} mentioned you in ${workspaceName || 'your workspace'}`,
+      html: mentionTemplate({
+        mentionerName: comment.author.name,
+        workspaceName: workspaceName || 'your workspace',
+        commentContent: content,
+        appUrl: process.env.CLIENT_URL
+      })
+    }).catch(err => console.warn(`Mention email to ${user.email} failed:`, err.message))
   }
 
   return { comment, mentionedNotifications }

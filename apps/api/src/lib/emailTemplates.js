@@ -1,5 +1,10 @@
+const { escapeHtml } = require('./sanitize')
+
 // invitation email template
-const inviteTemplate = ({ inviterName, workspaceName, loginUrl }) => `
+const inviteTemplate = ({ inviterName, workspaceName, loginUrl }) => {
+  inviterName = escapeHtml(inviterName)
+  workspaceName = escapeHtml(workspaceName)
+  return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #6366f1;">You've been invited! 🎉</h2>
     <p><strong>${inviterName}</strong> has invited you to join <strong>${workspaceName}</strong> on Team Hub.</p>
@@ -22,9 +27,14 @@ const inviteTemplate = ({ inviterName, workspaceName, loginUrl }) => `
     </p>
   </div>
 `
+}
 
 // @mention email template
-const mentionTemplate = ({ mentionerName, workspaceName, commentContent, appUrl }) => `
+const mentionTemplate = ({ mentionerName, workspaceName, commentContent, appUrl }) => {
+  mentionerName = escapeHtml(mentionerName)
+  workspaceName = escapeHtml(workspaceName)
+  commentContent = escapeHtml(commentContent)
+  return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <h2 style="color: #6366f1;">You were mentioned 💬</h2>
     <p><strong>${mentionerName}</strong> mentioned you in <strong>${workspaceName}</strong>:</p>
@@ -52,5 +62,6 @@ const mentionTemplate = ({ mentionerName, workspaceName, commentContent, appUrl 
     </a>
   </div>
 `
+}
 
 module.exports = { inviteTemplate, mentionTemplate }

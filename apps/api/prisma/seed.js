@@ -3,6 +3,9 @@ const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
+// keep demo data current: due dates relative to when the seed runs
+const daysFromNow = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+
 async function main() {
   console.log('🌱 Seeding database...')
 
@@ -102,7 +105,7 @@ async function main() {
   const goal1 = await prisma.goal.create({
     data: {
       title: 'Launch Version 1.0',
-      dueDate: new Date('2024-12-31'),
+      dueDate: daysFromNow(45),
       status: 'IN_PROGRESS',
       ownerId: admin.id,
       workspaceId: workspace.id
@@ -112,7 +115,7 @@ async function main() {
   const goal2 = await prisma.goal.create({
     data: {
       title: 'Improve Team Onboarding',
-      dueDate: new Date('2024-09-30'),
+      dueDate: daysFromNow(20),
       status: 'NOT_STARTED',
       ownerId: member1.id,
       workspaceId: workspace.id
@@ -122,7 +125,7 @@ async function main() {
   const goal3 = await prisma.goal.create({
     data: {
       title: 'Q3 Marketing Campaign',
-      dueDate: new Date('2024-08-01'),
+      dueDate: daysFromNow(-10),
       status: 'COMPLETED',
       ownerId: member2.id,
       workspaceId: workspace.id
@@ -181,7 +184,8 @@ async function main() {
         title: 'Set up CI/CD pipeline',
         priority: 'HIGH',
         status: 'DONE',
-        dueDate: new Date('2024-06-30'),
+        dueDate: daysFromNow(-2),
+        completedAt: new Date(),
         goalId: goal1.id,
         assigneeId: admin.id,
         workspaceId: workspace.id,
@@ -191,7 +195,7 @@ async function main() {
         title: 'Design system components',
         priority: 'HIGH',
         status: 'DOING',
-        dueDate: new Date('2024-07-15'),
+        dueDate: daysFromNow(5),
         goalId: goal1.id,
         assigneeId: member1.id,
         workspaceId: workspace.id,
@@ -201,7 +205,7 @@ async function main() {
         title: 'Write API documentation',
         priority: 'MEDIUM',
         status: 'DOING',
-        dueDate: new Date('2024-07-20'),
+        dueDate: daysFromNow(7),
         goalId: goal1.id,
         assigneeId: admin.id,
         workspaceId: workspace.id,
@@ -211,7 +215,7 @@ async function main() {
         title: 'Set up error monitoring',
         priority: 'MEDIUM',
         status: 'TODO',
-        dueDate: new Date('2024-08-01'),
+        dueDate: daysFromNow(-3),
         goalId: goal1.id,
         assigneeId: member2.id,
         workspaceId: workspace.id,
@@ -221,7 +225,7 @@ async function main() {
         title: 'Create onboarding checklist',
         priority: 'HIGH',
         status: 'TODO',
-        dueDate: new Date('2024-08-15'),
+        dueDate: daysFromNow(14),
         goalId: goal2.id,
         assigneeId: member1.id,
         workspaceId: workspace.id,
@@ -231,7 +235,7 @@ async function main() {
         title: 'Record welcome video',
         priority: 'LOW',
         status: 'TODO',
-        dueDate: new Date('2024-09-01'),
+        dueDate: daysFromNow(21),
         goalId: goal2.id,
         assigneeId: member1.id,
         workspaceId: workspace.id,
@@ -245,7 +249,7 @@ async function main() {
   // ─── create announcements ──────────────────────────────
   const announcement1 = await prisma.announcement.create({
     data: {
-      content: '🎉 Welcome to Team Hub! This is your collaborative workspace. Use Goals to track progress, Action Items for tasks, and Announcements to keep everyone informed.',
+      content: '<h2>🎉 Welcome to Team Hub!</h2><p>This is your collaborative workspace:</p><ul><li><strong>Goals</strong> to track progress</li><li><strong>Action Items</strong> for tasks</li><li><strong>Announcements</strong> to keep everyone informed</li></ul>',
       pinned: true,
       workspaceId: workspace.id,
       authorId: admin.id

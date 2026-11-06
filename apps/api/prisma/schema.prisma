@@ -31,75 +31,77 @@ enum ActionStatus {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  name        String                          
-  email       String   @unique
-  password    String
-  avatar      String?
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
 
   memberships   WorkspaceMember[]
-  goals         Goal[]           @relation("UserGoals")
-  assignedItems ActionItem[]     @relation("AssignedItems")
-  createdItems  ActionItem[]     @relation("CreatedItems")
+  goals         Goal[]            @relation("UserGoals")
+  assignedItems ActionItem[]      @relation("AssignedItems")
+  createdItems  ActionItem[]      @relation("CreatedItems")
   notifications Notification[]
   auditLogs     AuditLog[]
-  goalUpdates   GoalUpdate[]                  
-  announcements Announcement[]                
-  comments      Comment[]                     
-  reactions     Reaction[]                    
+  goalUpdates   GoalUpdate[]
+  announcements Announcement[]
+  comments      Comment[]
+  reactions     Reaction[]
+  sentInvites   WorkspaceInvite[]
 }
 
 model Workspace {
-  id           Int      @id @default(autoincrement())
-  name         String
-  description  String?
-  accentColor  String?
-  createdAt    DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  accentColor String?
+  createdAt   DateTime @default(now())
 
   members       WorkspaceMember[]
   goals         Goal[]
   announcements Announcement[]
   auditLogs     AuditLog[]
   actionItems   ActionItem[]
+  invites       WorkspaceInvite[]
 }
 
 model WorkspaceMember {
-  id        Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   userId      Int
   workspaceId Int
 
-  role        String
+  role String
 
   //  ADD THESE PERMISSIONS
-  canCreateGoals          Boolean @default(false)
-  canPostAnnouncements    Boolean @default(false)
-  canInviteMembers        Boolean @default(false)
-  canManageActionItems    Boolean @default(false)
+  canCreateGoals       Boolean @default(false)
+  canPostAnnouncements Boolean @default(false)
+  canInviteMembers     Boolean @default(false)
+  canManageActionItems Boolean @default(false)
 
-  user        User       @relation(fields: [userId], references: [id])
-  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, workspaceId])
 }
 
 model Goal {
-  id          Int        @id @default(autoincrement())
-  title       String
-  dueDate     DateTime?
-  status      GoalStatus @default(NOT_STARTED)
-  createdAt   DateTime   @default(now())     
+  id        Int        @id @default(autoincrement())
+  title     String
+  dueDate   DateTime?
+  status    GoalStatus @default(NOT_STARTED)
+  createdAt DateTime   @default(now())
 
   ownerId     Int
   workspaceId Int
 
-  owner       User      @relation("UserGoals", fields: [ownerId], references: [id], onDelete: Cascade)
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner     User      @relation("UserGoals", fields: [ownerId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   milestones  Milestone[]
   actionItems ActionItem[]
-  updates     GoalUpdate[]                   
+  updates     GoalUpdate[]
 }
 
 // ✅ NEW — activity feed posts on a goal
@@ -108,29 +110,30 @@ model GoalUpdate {
   content   String
   createdAt DateTime @default(now())
 
-  goalId    Int
-  authorId  Int
+  goalId   Int
+  authorId Int
 
-  goal      Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  author    User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  goal   Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
 
 model Milestone {
-  id        Int    @id @default(autoincrement())
-  title     String
-  progress  Int    @default(0)
+  id       Int    @id @default(autoincrement())
+  title    String
+  progress Int    @default(0)
 
-  goalId    Int
-  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId Int
+  goal   Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 }
 
 model ActionItem {
   id          Int          @id @default(autoincrement())
-  title       String                          
+  title       String
   priority    Priority
   dueDate     DateTime?
   status      ActionStatus @default(TODO)
-  createdAt   DateTime     @default(now())    
+  completedAt DateTime? // set when status becomes DONE
+  createdAt   DateTime     @default(now())
 
   workspaceId Int
   goalId      Int?
@@ -144,44 +147,41 @@ model ActionItem {
 }
 
 model Announcement {
-  id          Int      @id @default(autoincrement())
-  content     String
-  pinned      Boolean  @default(false)
-  createdAt   DateTime @default(now())        
-
+  id        Int      @id @default(autoincrement())
+  content   String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   workspaceId Int
-  authorId    Int                             
-
+  authorId    Int
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)  
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  reactions   Reaction[]                      
+  reactions Reaction[]
 
-  comments    Comment[]                       
-
+  comments Comment[]
 }
 
 //  NEW — emoji reactions on announcements
 model Reaction {
-  id             Int    @id @default(autoincrement())
-  emoji          String
+  id    Int    @id @default(autoincrement())
+  emoji String
 
   announcementId Int
   userId         Int
 
   announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
-user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([announcementId, userId, emoji])   // one emoji type per user per post
+  @@unique([announcementId, userId, emoji]) // one emoji type per user per post
 }
 
 //  NEW — comments on announcements
 model Comment {
-  id             Int      @id @default(autoincrement())
-  content        String
-  createdAt      DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
 
   announcementId Int
   authorId       Int
@@ -193,23 +193,38 @@ model Comment {
 model Notification {
   id        Int      @id @default(autoincrement())
   type      String
-  message   String?                           
+  message   String?
   read      Boolean  @default(false)
-  createdAt DateTime @default(now())          
+  createdAt DateTime @default(now())
 
-  userId    Int
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
-  id          Int      @id @default(autoincrement())
-  action      String
-  metadata    String?
-  createdAt   DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  action    String
+  metadata  String?
+  createdAt DateTime @default(now())
 
   workspaceId Int
   userId      Int
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// pending invite for an email that has no account yet;
+// converted into a WorkspaceMember when that email registers
+model WorkspaceInvite {
+  id          Int      @id @default(autoincrement())
+  email       String
+  workspaceId Int
+  invitedById Int
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([email, workspaceId])
 }

@@ -1,1 +1,11 @@
 node_modules
+.turbo
+.env
+.env.*
+!.env.example
+
+# editor / local tooling
+.vs/
+.vscode/
+.claude/launch.json
+.DS_Store

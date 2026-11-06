@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Bell, User, Settings, LogOut } from 'lucide-react';
+import { Menu, Bell, User, Settings, LogOut, Search, Sun, Moon, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useAuthStore from '@/stores/authStore';
 import useNotificationStore from '@/stores/notificationStore';
-import { formatRelativeTime, getInitials } from '@/lib/utils';                
+import { formatRelativeTime, getInitials } from '@/lib/utils';
+import { useTheme } from '@/hooks/useTheme';
+
+const THEME_ICONS = { system: Monitor, light: Sun, dark: Moon };
 
 const PAGE_TITLES = {
   '/dashboard': 'Dashboard',
@@ -20,8 +23,12 @@ const PAGE_TITLES = {
   '/dashboard/members': 'Members',
 };
 
-export default function Topbar({ onMenuClick }) {
+export default function Topbar({ onMenuClick, onOpenPalette }) {
   const pathname = usePathname();
+  const { preference, cycleTheme } = useTheme();
+  const ThemeIcon = THEME_ICONS[preference];
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => setIsMac(/Mac|iPhone|iPad/.test(navigator.platform)), []);
   const { user, logout } = useAuthStore();
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotificationStore();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -29,7 +36,11 @@ export default function Topbar({ onMenuClick }) {
   const notifRef = useRef(null);
   const userRef = useRef(null);
 
-  const title = PAGE_TITLES[pathname] || 'Dashboard';
+  // nested routes (e.g. /dashboard/goals/12) use their section's title
+  const section = Object.keys(PAGE_TITLES)
+    .filter((p) => pathname === p || pathname.startsWith(`${p}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  const title = PAGE_TITLES[section] || 'Dashboard';
 
   useEffect(() => {
     const handler = (e) => {
@@ -50,6 +61,23 @@ export default function Topbar({ onMenuClick }) {
       </div>
 
       <div className="topbar-right">
+        {/* Command palette */}
+        <button className="topbar-search" onClick={onOpenPalette} aria-label="Open command palette">
+          <Search size={14} />
+          <span className="topbar-search-text">Search or jump to…</span>
+          <kbd className="topbar-kbd">{isMac ? '⌘' : 'Ctrl'} K</kbd>
+        </button>
+
+        {/* Theme: system → light → dark */}
+        <button
+          className="topbar-icon-btn"
+          onClick={cycleTheme}
+          aria-label={`Theme: ${preference}`}
+          title={`Theme: ${preference} (click to change)`}
+        >
+          <ThemeIcon size={17} />
+        </button>
+
         {/* Notifications */}
         <div className="topbar-icon-wrap" ref={notifRef}>
           <button
@@ -136,8 +164,8 @@ export default function Topbar({ onMenuClick }) {
       <style jsx>{`
         .topbar {
           height: 58px;
-          background: #fff;
-          border-bottom: 1px solid #e4e7ec;
+          background: var(--c-surface);
+          border-bottom: 1px solid var(--c-border);
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -150,22 +178,37 @@ export default function Topbar({ onMenuClick }) {
         .topbar-left { display: flex; align-items: center; gap: 14px; }
         .topbar-menu {
           background: none; border: none; cursor: pointer;
-          color: #6b7280; display: flex; align-items: center;
+          color: var(--c-text-3); display: flex; align-items: center;
           padding: 6px; border-radius: 7px; transition: background 0.12s;
         }
-        .topbar-menu:hover { background: #f1f3f7; color: #101828; }
-        .topbar-title { font-size: 16px; font-weight: 700; color: #101828; letter-spacing: -0.3px; margin: 0; }
+        .topbar-menu:hover { background: var(--c-surface-2); color: var(--c-text); }
+        .topbar-title { font-size: 16px; font-weight: 700; color: var(--c-text); letter-spacing: -0.3px; margin: 0; }
         .topbar-right { display: flex; align-items: center; gap: 8px; }
         .topbar-icon-wrap { position: relative; }
         .topbar-icon-btn {
           position: relative;
           width: 36px; height: 36px;
           background: none; border: none; cursor: pointer;
-          color: #6b7280; border-radius: 8px;
+          color: var(--c-text-3); border-radius: 8px;
           display: flex; align-items: center; justify-content: center;
           transition: background 0.12s;
         }
-        .topbar-icon-btn:hover { background: #f1f3f7; color: #101828; }
+        .topbar-icon-btn:hover { background: var(--c-surface-2); color: var(--c-text); }
+        .topbar-search {
+          display: flex; align-items: center; gap: 8px;
+          height: 34px; padding: 0 8px 0 10px; margin-right: 4px;
+          background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 8px;
+          color: var(--c-text-4); font-size: 13px; cursor: pointer; font-family: var(--font-sans);
+        }
+        .topbar-search:hover { border-color: var(--c-border-2); color: var(--c-text-3); }
+        .topbar-kbd {
+          font-family: var(--font-sans); font-size: 11px; color: var(--c-text-3);
+          background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 5px; padding: 1px 6px;
+        }
+        @media (max-width: 640px) {
+          .topbar-search-text, .topbar-kbd { display: none; }
+          .topbar-search { width: 36px; justify-content: center; padding: 0; }
+        }
         .topbar-badge {
           position: absolute;
           top: 5px; right: 5px;
@@ -174,7 +217,7 @@ export default function Topbar({ onMenuClick }) {
           font-size: 10px; font-weight: 700;
           border-radius: 8px; padding: 0 4px;
           display: flex; align-items: center; justify-content: center;
-          border: 1.5px solid #fff;
+          border: 1.5px solid var(--c-surface);
         }
         .topbar-user-btn {
           background: none; border: none; cursor: pointer; padding: 0;
@@ -191,61 +234,62 @@ export default function Topbar({ onMenuClick }) {
         /* Notifications dropdown */
         .notif-dropdown {
           position: absolute; top: calc(100% + 8px); right: 0;
-          width: 320px; background: #fff;
-          border: 1px solid #e4e7ec; border-radius: 12px;
+          width: 320px; background: var(--c-surface);
+          border: 1px solid var(--c-border); border-radius: 12px;
           box-shadow: 0 12px 32px rgba(16,24,40,0.12);
           z-index: 100; overflow: hidden;
         }
         .notif-header {
           display: flex; align-items: center; justify-content: space-between;
           padding: 14px 16px 10px;
-          border-bottom: 1px solid #f1f3f7;
+          border-bottom: 1px solid var(--c-border-soft);
         }
-        .notif-title { font-size: 14px; font-weight: 700; color: #101828; }
+        .notif-title { font-size: 14px; font-weight: 700; color: var(--c-text); }
         .notif-read-all {
           font-size: 12px; color: #4f46e5; background: none;
           border: none; cursor: pointer; font-weight: 500;
         }
         .notif-list { max-height: 320px; overflow-y: auto; }
-        .notif-empty { padding: 24px; text-align: center; font-size: 13px; color: #98a2b3; }
+        .notif-empty { padding: 24px; text-align: center; font-size: 13px; color: var(--c-text-4); }
         .notif-item {
           display: flex; align-items: flex-start; gap: 10px;
           padding: 12px 16px; cursor: pointer;
-          transition: background 0.12s; border-bottom: 1px solid #f8f9fb;
+          transition: background 0.12s; border-bottom: 1px solid var(--c-border-soft);
         }
-        .notif-item:hover { background: #f8f9fb; }
-        .notif-item--unread { background: #fafbff; }
+        .notif-item:hover { background: var(--c-bg); }
+        .notif-item--unread { background: var(--c-hover); }
         .notif-dot {
           width: 7px; height: 7px; border-radius: 50%;
-          background: #e4e7ec; flex-shrink: 0; margin-top: 5px;
+          background: var(--c-surface-3); flex-shrink: 0; margin-top: 5px;
         }
         .notif-item--unread .notif-dot { background: #4f46e5; }
         .notif-body { flex: 1; min-width: 0; }
-        .notif-msg { font-size: 13px; color: #374151; margin: 0 0 3px; line-height: 1.4; }
-        .notif-time { font-size: 11px; color: #98a2b3; }
+        .notif-msg { font-size: 13px; color: var(--c-text-2); margin: 0 0 3px; line-height: 1.4; }
+        .notif-time { font-size: 11px; color: var(--c-text-4); }
 
         /* User dropdown */
         .user-dropdown {
           position: absolute; top: calc(100% + 8px); right: 0;
-          width: 200px; background: #fff;
-          border: 1px solid #e4e7ec; border-radius: 12px;
+          width: 200px; background: var(--c-surface);
+          border: 1px solid var(--c-border); border-radius: 12px;
           box-shadow: 0 12px 32px rgba(16,24,40,0.12);
           z-index: 100; overflow: hidden;
         }
-        .user-dropdown-header { padding: 14px 16px 10px; border-bottom: 1px solid #f1f3f7; }
-        .user-dropdown-name { font-size: 13px; font-weight: 600; color: #101828; margin: 0 0 2px; }
-        .user-dropdown-email { font-size: 12px; color: #98a2b3; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-dropdown-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--c-border-soft); }
+        .user-dropdown-name { font-size: 13px; font-weight: 600; color: var(--c-text); margin: 0 0 2px; }
+        .user-dropdown-email { font-size: 12px; color: var(--c-text-4); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-dropdown-items { padding: 6px; }
-        .user-dropdown-item {
+        /* next/link renders outside the styled-jsx scope, hence :global */
+        .user-dropdown-items :global(.user-dropdown-item) {
           display: flex; align-items: center; gap: 9px;
-          padding: 8px 10px; font-size: 13px; color: #374151;
+          padding: 8px 10px; font-size: 13px; color: var(--c-text-2);
           background: none; border: none; cursor: pointer;
           text-decoration: none; border-radius: 7px; width: 100%;
           transition: background 0.12s; font-family: var(--font-sans);
         }
-        .user-dropdown-item:hover { background: #f8f9fb; }
-        .user-dropdown-item--danger:hover { background: #fef2f2; color: #f04438; }
-        .user-dropdown-divider { height: 1px; background: #f1f3f7; margin: 4px 0; }
+        .user-dropdown-items :global(.user-dropdown-item:hover) { background: var(--c-bg); }
+        .user-dropdown-items :global(.user-dropdown-item--danger:hover) { background: var(--c-danger-soft); color: #f04438; }
+        .user-dropdown-divider { height: 1px; background: var(--c-surface-2); margin: 4px 0; }
       `}</style>
     </header>
   );

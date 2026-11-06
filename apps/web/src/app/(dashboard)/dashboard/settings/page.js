@@ -314,43 +314,43 @@ export default function SettingsPage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 20px; max-width: 720px; }
         .page-header { }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
-        .tabs { display: flex; gap: 2px; background: #f1f3f7; border-radius: 10px; padding: 4px; width: fit-content; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
+        .tabs { display: flex; gap: 2px; background: var(--c-surface-2); border-radius: 10px; padding: 4px; width: fit-content; }
         .tab {
           padding: 7px 16px; font-size: 13px; font-weight: 500; border: none;
-          background: none; border-radius: 7px; cursor: pointer; color: #6b7280;
+          background: none; border-radius: 7px; cursor: pointer; color: var(--c-text-3);
           font-family: var(--font-sans); transition: all 0.12s;
         }
-        .tab--active { background: #fff; color: #101828; font-weight: 600; box-shadow: 0 1px 3px rgba(16,24,40,0.1); }
-        .settings-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 14px; padding: 24px; }
-        .section-title { font-size: 15px; font-weight: 700; color: #101828; margin: 0 0 4px; }
-        .section-sub { font-size: 13px; color: #6b7280; margin: 0 0 16px; }
-        .no-perm { font-size: 13px; color: #98a2b3; margin: 0 0 16px; }
+        .tab--active { background: var(--c-surface); color: var(--c-text); font-weight: 600; box-shadow: 0 1px 3px rgba(16,24,40,0.1); }
+        .settings-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px; padding: 24px; }
+        .section-title { font-size: 15px; font-weight: 700; color: var(--c-text); margin: 0 0 4px; }
+        .section-sub { font-size: 13px; color: var(--c-text-3); margin: 0 0 16px; }
+        .no-perm { font-size: 13px; color: var(--c-text-4); margin: 0 0 16px; }
         .settings-form { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
         .field { display: flex; flex-direction: column; gap: 6px; }
-        .label { font-size: 13px; font-weight: 500; color: #374151; }
+        .label { font-size: 13px; font-weight: 500; color: var(--c-text-2); }
         .input {
           height: 42px; padding: 0 14px; font-size: 14px;
-          border: 1px solid #d1d5db; border-radius: 9px; outline: none;
-          font-family: var(--font-sans); color: #101828; background: #fff;
+          border: 1px solid var(--c-border-2); border-radius: 9px; outline: none;
+          font-family: var(--font-sans); color: var(--c-text); background: var(--c-surface);
           transition: border-color 0.15s, box-shadow 0.15s;
           box-sizing: border-box; width: 100%;
         }
         .input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .input:disabled { background: #f8f9fb; color: #98a2b3; }
+        .input:disabled { background: var(--c-bg); color: var(--c-text-4); }
         .input--textarea { height: auto; padding: 10px 14px; resize: vertical; }
         .color-row { display: flex; align-items: center; gap: 12px; }
         .color-input { width: 40px; height: 40px; border: none; cursor: pointer; border-radius: 8px; }
-        .color-value { font-size: 13px; color: #374151; font-family: monospace; }
+        .color-value { font-size: 13px; color: var(--c-text-2); font-family: monospace; }
         .color-preview { width: 24px; height: 24px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); }
         .form-footer { display: flex; justify-content: flex-end; }
         .danger-zone {
-          margin-top: 24px; padding: 20px; border: 1px solid #fecaca;
-          border-radius: 12px; background: #fef2f2;
+          margin-top: 24px; padding: 20px; border: 1px solid var(--c-danger-border);
+          border-radius: 12px; background: var(--c-danger-soft);
         }
         .danger-title { font-size: 14px; font-weight: 700; color: #dc2626; margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
-        .danger-desc { font-size: 13px; color: #6b7280; margin: 0 0 14px; line-height: 1.5; }
+        .danger-desc { font-size: 13px; color: var(--c-text-3); margin: 0 0 14px; line-height: 1.5; }
         .btn-danger {
           display: flex; align-items: center; gap: 6px; padding: 0 18px;
           height: 40px; background: #dc2626; color: #fff; border: none; border-radius: 9px;
@@ -360,11 +360,11 @@ export default function SettingsPage() {
         .btn-danger:hover { background: #b91c1c; }
         .invite-form { display: flex; gap: 10px; margin-bottom: 20px; margin-top: 16px; }
         .invite-form .input { flex: 1; }
-        .pending-invites { border: 1px dashed #e4e7ec; border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; }
-        .pending-title { font-size: 11px; font-weight: 700; color: #98a2b3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .pending-invites { border: 1px dashed var(--c-border); border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; }
+        .pending-title { font-size: 11px; font-weight: 700; color: var(--c-text-4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
         .pending-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
-        .pending-email { color: #101828; font-weight: 500; }
-        .pending-hint { color: #98a2b3; font-size: 12px; flex: 1; }
+        .pending-email { color: var(--c-text); font-weight: 500; }
+        .pending-hint { color: var(--c-text-4); font-size: 12px; flex: 1; }
         .btn-primary {
           display: flex; align-items: center; gap: 6px; padding: 0 18px;
           height: 42px; background: #4f46e5; color: #fff; border: none; border-radius: 9px;
@@ -376,7 +376,7 @@ export default function SettingsPage() {
         .member-list { display: flex; flex-direction: column; gap: 2px; }
         .member-row {
           display: flex; align-items: center; justify-content: space-between;
-          padding: 12px 0; border-bottom: 1px solid #f1f3f7; gap: 12px;
+          padding: 12px 0; border-bottom: 1px solid var(--c-border-soft); gap: 12px;
         }
         .member-row:last-child { border-bottom: none; }
         .member-info { display: flex; align-items: center; gap: 12px; }
@@ -386,45 +386,45 @@ export default function SettingsPage() {
           font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden;
         }
         .member-avatar--sm { width: 28px; height: 28px; font-size: 10px; }
-        .member-name { font-size: 14px; font-weight: 600; color: #101828; margin: 0 0 2px; }
-        .member-email { font-size: 12px; color: #98a2b3; margin: 0; }
+        .member-name { font-size: 14px; font-weight: 600; color: var(--c-text); margin: 0 0 2px; }
+        .member-email { font-size: 12px; color: var(--c-text-4); margin: 0; }
         .you-badge {
           display: inline; font-size: 10px; font-weight: 600; color: #4f46e5;
-          background: #eef2ff; padding: 1px 6px; border-radius: 10px; margin-left: 6px;
+          background: var(--c-accent-soft); padding: 1px 6px; border-radius: 10px; margin-left: 6px;
         }
         .member-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .role-select {
-          height: 32px; padding: 0 10px; font-size: 12.5px; border: 1px solid #e4e7ec;
-          border-radius: 7px; background: #f8f9fb; cursor: pointer; color: #374151;
+          height: 32px; padding: 0 10px; font-size: 12.5px; border: 1px solid var(--c-border);
+          border-radius: 7px; background: var(--c-bg); cursor: pointer; color: var(--c-text-2);
           font-family: var(--font-sans); outline: none;
         }
         .role-badge {
           display: inline-flex; align-items: center; gap: 4px;
           padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
-          background: #f1f3f7; color: #6b7280;
+          background: var(--c-surface-2); color: var(--c-text-3);
         }
-        .role-badge--admin { background: #eef2ff; color: #4f46e5; }
+        .role-badge--admin { background: var(--c-accent-soft); color: #4f46e5; }
         .icon-btn {
           width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-          background: none; border: 1px solid #e4e7ec; border-radius: 7px; cursor: pointer; color: #6b7280;
+          background: none; border: 1px solid var(--c-border); border-radius: 7px; cursor: pointer; color: var(--c-text-3);
           transition: all 0.12s;
         }
-        .icon-btn--danger:hover { background: #fef2f2; color: #f04438; border-color: #fecaca; }
+        .icon-btn--danger:hover { background: var(--c-danger-soft); color: #f04438; border-color: var(--c-danger-border); }
         .perm-table { margin-top: 16px; }
         .perm-header {
           display: grid; grid-template-columns: 200px repeat(4, 1fr);
-          padding: 8px 0; border-bottom: 2px solid #e4e7ec;
-          font-size: 11px; font-weight: 700; color: #98a2b3; text-transform: uppercase; letter-spacing: 0.5px;
+          padding: 8px 0; border-bottom: 2px solid var(--c-border);
+          font-size: 11px; font-weight: 700; color: var(--c-text-4); text-transform: uppercase; letter-spacing: 0.5px;
         }
         .perm-col-label { text-align: center; font-size: 10px; }
         .perm-row {
           display: grid; grid-template-columns: 200px repeat(4, 1fr);
-          padding: 10px 0; border-bottom: 1px solid #f1f3f7; align-items: center;
+          padding: 10px 0; border-bottom: 1px solid var(--c-border-soft); align-items: center;
         }
-        .perm-member { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #374151; font-weight: 500; }
+        .perm-member { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--c-text-2); font-weight: 500; }
         .perm-cell { display: flex; justify-content: center; }
         .perm-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: #4f46e5; }
-        .perm-empty { padding: 20px 0; text-align: center; font-size: 13px; color: #98a2b3; }
+        .perm-empty { padding: 20px 0; text-align: center; font-size: 13px; color: var(--c-text-4); }
       `}</style>
     </div>
   );

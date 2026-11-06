@@ -121,8 +121,8 @@ export default function GoalsPage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 24px; }
         .page-header { display: flex; align-items: flex-start; justify-content: space-between; }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
         .btn-primary {
           display: flex; align-items: center; gap: 6px;
           padding: 9px 18px; background: #4f46e5; color: #fff;
@@ -133,37 +133,37 @@ export default function GoalsPage() {
         .btn-primary:hover { background: #4338ca; }
         .filter-bar { display: flex; gap: 6px; flex-wrap: wrap; }
         .filter-btn {
-          padding: 6px 14px; background: #fff; border: 1px solid #e4e7ec;
-          border-radius: 20px; font-size: 12.5px; color: #6b7280;
+          padding: 6px 14px; background: var(--c-surface); border: 1px solid var(--c-border);
+          border-radius: 20px; font-size: 12.5px; color: var(--c-text-3);
           cursor: pointer; font-family: var(--font-sans); transition: all 0.12s;
           font-weight: 500;
         }
-        .filter-btn:hover { border-color: #c7d2fe; color: #4f46e5; }
+        .filter-btn:hover { border-color: var(--c-accent-border); color: #4f46e5; }
         .filter-btn--active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
-        .loading { text-align: center; padding: 40px; color: #98a2b3; font-size: 14px; }
+        .loading { text-align: center; padding: 40px; color: var(--c-text-4); font-size: 14px; }
         .empty-state {
           display: flex; flex-direction: column; align-items: center;
-          gap: 12px; padding: 60px 20px; color: #98a2b3; text-align: center;
+          gap: 12px; padding: 60px 20px; color: var(--c-text-4); text-align: center;
         }
         .empty-state p { font-size: 14px; margin: 0; }
         .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .goal-card {
-          background: #fff; border: 1px solid #e4e7ec; border-radius: 12px;
+        :global(.goal-card) {
+          background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px;
           padding: 20px; text-decoration: none; display: flex; flex-direction: column;
           gap: 12px; transition: box-shadow 0.15s, transform 0.15s;
         }
-        .goal-card:hover { box-shadow: 0 4px 16px rgba(16,24,40,0.08); transform: translateY(-1px); }
+        :global(.goal-card:hover) { box-shadow: 0 4px 16px rgba(16,24,40,0.08); transform: translateY(-1px); }
         .goal-card-header { display: flex; align-items: center; justify-content: space-between; }
-        .goal-card-arrow { color: #98a2b3; }
-        .goal-card-title { font-size: 15px; font-weight: 600; color: #101828; margin: 0; line-height: 1.4; }
+        .goal-card-arrow { color: var(--c-text-4); }
+        .goal-card-title { font-size: 15px; font-weight: 600; color: var(--c-text); margin: 0; line-height: 1.4; }
         .goal-progress { display: flex; align-items: center; gap: 10px; }
-        .goal-progress-bar { flex: 1; height: 6px; background: #f1f3f7; border-radius: 3px; overflow: hidden; }
+        .goal-progress-bar { flex: 1; height: 6px; background: var(--c-surface-2); border-radius: 3px; overflow: hidden; }
         .goal-progress-fill { height: 100%; background: #4f46e5; border-radius: 3px; transition: width 0.3s; }
         .goal-progress-pct { font-size: 12px; font-weight: 600; color: #4f46e5; white-space: nowrap; }
         .goal-card-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
         .goal-meta-item {
           display: flex; align-items: center; gap: 4px;
-          font-size: 12px; color: #98a2b3;
+          font-size: 12px; color: var(--c-text-4);
         }
         :global(.badge) {
           display: inline-flex; align-items: center;

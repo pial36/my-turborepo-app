@@ -170,27 +170,27 @@ export default function AuditLogPage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 24px; }
         .page-header { display: flex; align-items: flex-start; justify-content: space-between; }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
-        .no-access { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 80px 20px; color: #98a2b3; text-align: center; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
+        .no-access { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 80px 20px; color: var(--c-text-4); text-align: center; }
         .no-access p { font-size: 14px; margin: 0; }
         .btn-export {
           display: flex; align-items: center; gap: 6px; padding: 9px 18px;
-          background: #fff; color: #374151; border: 1px solid #e4e7ec;
+          background: var(--c-surface); color: var(--c-text-2); border: 1px solid var(--c-border);
           border-radius: 9px; font-size: 13.5px; font-weight: 600; cursor: pointer;
           font-family: var(--font-sans); transition: all 0.15s;
         }
-        .btn-export:hover { background: #f8f9fb; }
-        .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border: 1px solid #e4e7ec; border-radius: 10px; padding: 12px 16px; }
-        .filter-group { display: flex; align-items: center; gap: 6px; color: #6b7280; }
+        .btn-export:hover { background: var(--c-bg); }
+        .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; padding: 12px 16px; }
+        .filter-group { display: flex; align-items: center; gap: 6px; color: var(--c-text-3); }
         .filter-select {
-          height: 34px; padding: 0 10px; font-size: 13px; border: 1px solid #e4e7ec;
-          border-radius: 7px; background: #f8f9fb; cursor: pointer; color: #374151;
+          height: 34px; padding: 0 10px; font-size: 13px; border: 1px solid var(--c-border);
+          border-radius: 7px; background: var(--c-bg); cursor: pointer; color: var(--c-text-2);
           font-family: var(--font-sans); outline: none;
         }
         .filter-input {
-          height: 34px; padding: 0 10px; font-size: 13px; border: 1px solid #e4e7ec;
-          border-radius: 7px; background: #f8f9fb; color: #374151;
+          height: 34px; padding: 0 10px; font-size: 13px; border: 1px solid var(--c-border);
+          border-radius: 7px; background: var(--c-bg); color: var(--c-text-2);
           font-family: var(--font-sans); outline: none;
         }
         .filter-input:focus, .filter-select:focus { border-color: #6366f1; }
@@ -201,46 +201,46 @@ export default function AuditLogPage() {
         }
         .btn-apply:hover { background: #4338ca; }
         .btn-ghost {
-          height: 34px; padding: 0 14px; background: none; border: 1px solid #e4e7ec;
-          border-radius: 7px; font-size: 13px; color: #374151; cursor: pointer;
+          height: 34px; padding: 0 14px; background: none; border: 1px solid var(--c-border);
+          border-radius: 7px; font-size: 13px; color: var(--c-text-2); cursor: pointer;
           font-family: var(--font-sans);
         }
-        .btn-ghost:hover { background: #f8f9fb; }
-        .loading, .empty { text-align: center; padding: 40px; color: #98a2b3; font-size: 14px; }
-        .log-table { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; overflow: hidden; }
+        .btn-ghost:hover { background: var(--c-bg); }
+        .loading, .empty { text-align: center; padding: 40px; color: var(--c-text-4); font-size: 14px; }
+        .log-table { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; overflow: hidden; }
         .log-header {
           display: grid; grid-template-columns: 220px 160px 1fr 140px;
-          padding: 10px 16px; background: #f8f9fb; border-bottom: 1px solid #e4e7ec;
-          font-size: 11px; font-weight: 700; color: #98a2b3; text-transform: uppercase; letter-spacing: 0.5px;
+          padding: 10px 16px; background: var(--c-bg); border-bottom: 1px solid var(--c-border);
+          font-size: 11px; font-weight: 700; color: var(--c-text-4); text-transform: uppercase; letter-spacing: 0.5px;
           gap: 12px;
         }
         .log-row {
           display: grid; grid-template-columns: 220px 160px 1fr 140px;
-          padding: 12px 16px; border-bottom: 1px solid #f8f9fb;
+          padding: 12px 16px; border-bottom: 1px solid var(--c-border-soft);
           align-items: center; gap: 12px; transition: background 0.12s;
         }
         .log-row:last-child { border-bottom: none; }
-        .log-row:hover { background: #f8f9fb; }
+        .log-row:hover { background: var(--c-bg); }
         .action-badge {
           display: inline-flex; align-items: center; padding: 3px 9px;
           border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap;
         }
-        .text-purple-600 { color: #7c3aed; } .bg-purple-50 { background: #f5f3ff; }
-        .text-blue-600 { color: #2563eb; } .bg-blue-50 { background: #eff6ff; }
-        .text-green-600 { color: #16a34a; } .bg-green-50 { background: #f0fdf4; }
-        .text-yellow-600 { color: #ca8a04; } .bg-yellow-50 { background: #fefce8; }
-        .text-red-600 { color: #dc2626; } .bg-red-50 { background: #fef2f2; }
-        .text-indigo-600 { color: #4f46e5; } .bg-indigo-50 { background: #eef2ff; }
-        .text-gray-600 { color: #4b5563; } .bg-gray-50 { background: #f9fafb; }
+        .text-purple-600 { color: #7c3aed; } .bg-purple-50 { background: var(--c-accent-soft); }
+        .text-blue-600 { color: #2563eb; } .bg-blue-50 { background: var(--c-info-soft); }
+        .text-green-600 { color: #16a34a; } .bg-green-50 { background: var(--c-success-soft); }
+        .text-yellow-600 { color: #ca8a04; } .bg-yellow-50 { background: var(--c-warning-soft); }
+        .text-red-600 { color: #dc2626; } .bg-red-50 { background: var(--c-danger-soft); }
+        .text-indigo-600 { color: #4f46e5; } .bg-indigo-50 { background: var(--c-accent-soft); }
+        .text-gray-600 { color: var(--c-text-2); } .bg-gray-50 { background: var(--c-hover); }
         .log-user { display: flex; align-items: center; gap: 8px; }
         .log-avatar {
           width: 26px; height: 26px; border-radius: 50%; background: #4f46e5;
           display: flex; align-items: center; justify-content: center;
           font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden;
         }
-        .log-user span { font-size: 13px; color: #374151; font-weight: 500; }
-        .log-meta { font-size: 13px; color: #6b7280; }
-        .log-time { font-size: 12px; color: #98a2b3; }
+        .log-user span { font-size: 13px; color: var(--c-text-2); font-weight: 500; }
+        .log-meta { font-size: 13px; color: var(--c-text-3); }
+        .log-time { font-size: 12px; color: var(--c-text-4); }
         @media (max-width: 900px) {
           .log-header, .log-row { grid-template-columns: 1fr auto; }
         }

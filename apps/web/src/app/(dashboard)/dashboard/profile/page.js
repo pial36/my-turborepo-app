@@ -105,16 +105,16 @@ export default function ProfilePage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 24px; max-width: 560px; }
         .page-header { }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
-        .profile-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 14px; padding: 28px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
+        .profile-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 14px; padding: 28px; }
         .avatar-section { display: flex; align-items: center; gap: 20px; }
         .avatar-wrap { position: relative; }
         .avatar {
           width: 72px; height: 72px; border-radius: 50%; background: #4f46e5;
           display: flex; align-items: center; justify-content: center;
           font-size: 24px; font-weight: 700; color: #fff; overflow: hidden;
-          border: 3px solid #fff; box-shadow: 0 0 0 2px #e4e7ec;
+          border: 3px solid var(--c-surface); box-shadow: 0 0 0 2px var(--c-border);
         }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; }
         .avatar-overlay {
@@ -123,34 +123,34 @@ export default function ProfilePage() {
         }
         .spinner {
           width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.4);
-          border-top-color: #fff; border-radius: 50%;
+          border-top-color: var(--c-surface); border-radius: 50%;
           animation: spin 0.7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .avatar-btn {
           position: absolute; bottom: 0; right: 0;
           width: 26px; height: 26px; border-radius: 50%;
-          background: #4f46e5; color: #fff; border: 2px solid #fff;
+          background: #4f46e5; color: #fff; border: 2px solid var(--c-surface);
           display: flex; align-items: center; justify-content: center;
           cursor: pointer; transition: background 0.15s;
         }
         .avatar-btn:hover:not(:disabled) { background: #4338ca; }
         .avatar-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .avatar-name { font-size: 16px; font-weight: 600; color: #101828; margin: 0 0 4px; }
-        .avatar-hint { font-size: 12px; color: #98a2b3; margin: 0; }
-        .divider { height: 1px; background: #f1f3f7; margin: 24px 0; }
+        .avatar-name { font-size: 16px; font-weight: 600; color: var(--c-text); margin: 0 0 4px; }
+        .avatar-hint { font-size: 12px; color: var(--c-text-4); margin: 0; }
+        .divider { height: 1px; background: var(--c-surface-2); margin: 24px 0; }
         .profile-form { display: flex; flex-direction: column; gap: 16px; }
         .field { display: flex; flex-direction: column; gap: 6px; }
-        .label { font-size: 13px; font-weight: 500; color: #374151; }
+        .label { font-size: 13px; font-weight: 500; color: var(--c-text-2); }
         .input {
           height: 42px; padding: 0 14px; font-size: 14px;
-          border: 1px solid #d1d5db; border-radius: 9px; outline: none;
-          font-family: var(--font-sans); color: #101828; background: #fff;
+          border: 1px solid var(--c-border-2); border-radius: 9px; outline: none;
+          font-family: var(--font-sans); color: var(--c-text); background: var(--c-surface);
           transition: border-color 0.15s, box-shadow 0.15s;
         }
         .input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .input--disabled { background: #f8f9fb; color: #98a2b3; cursor: not-allowed; }
-        .field-hint { font-size: 12px; color: #98a2b3; }
+        .input--disabled { background: var(--c-bg); color: var(--c-text-4); cursor: not-allowed; }
+        .field-hint { font-size: 12px; color: var(--c-text-4); }
         .form-footer { display: flex; justify-content: flex-end; padding-top: 4px; }
         .btn-primary {
           display: flex; align-items: center; gap: 7px; padding: 10px 20px;

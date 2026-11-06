@@ -238,7 +238,7 @@ const validate = () => {
         .auth-root {
           display: flex;
           min-height: 100vh;
-          background: #f8f9fb;
+          background: var(--c-bg);
         }
 
         /* Left */
@@ -325,7 +325,7 @@ const validate = () => {
           align-items: center;
           gap: 10px;
           font-size: 13.5px;
-          color: #9ca3af;
+          color: var(--c-text-4);
         }
 
         .auth-perk-icon {
@@ -351,7 +351,7 @@ const validate = () => {
         }
 
         .auth-grid-cell {
-          border: 0.5px solid #fff;
+          border: 0.5px solid var(--c-surface);
         }
 
         /* Right */
@@ -375,24 +375,24 @@ const validate = () => {
         .auth-form-title {
           font-size: 26px;
           font-weight: 700;
-          color: #101828;
+          color: var(--c-text);
           letter-spacing: -0.5px;
           margin: 0 0 6px;
         }
 
         .auth-form-sub {
           font-size: 14px;
-          color: #6b7280;
+          color: var(--c-text-3);
           margin: 0;
         }
 
-        .auth-link {
+        :global(.auth-link) {
           color: #4f46e5;
           font-weight: 500;
           text-decoration: none;
         }
 
-        .auth-link:hover {
+        :global(.auth-link:hover) {
           text-decoration: underline;
         }
 
@@ -411,7 +411,7 @@ const validate = () => {
         .auth-label {
           font-size: 13px;
           font-weight: 500;
-          color: #374151;
+          color: var(--c-text-2);
         }
 
         .auth-input-wrap {
@@ -424,9 +424,9 @@ const validate = () => {
           padding: 0 14px;
           font-size: 14px;
           font-family: var(--font-sans);
-          color: #101828;
-          background: #fff;
-          border: 1px solid #d1d5db;
+          color: var(--c-text);
+          background: var(--c-surface);
+          border: 1px solid var(--c-border-2);
           border-radius: 10px;
           outline: none;
           transition: border-color 0.15s, box-shadow 0.15s;
@@ -434,7 +434,7 @@ const validate = () => {
         }
 
         .auth-input::placeholder {
-          color: #9ca3af;
+          color: var(--c-text-4);
         }
 
         .auth-input:focus {
@@ -462,7 +462,7 @@ const validate = () => {
           background: none;
           border: none;
           cursor: pointer;
-          color: #9ca3af;
+          color: var(--c-text-4);
           display: flex;
           align-items: center;
           padding: 0;
@@ -516,14 +516,14 @@ const validate = () => {
           width: 18px;
           height: 18px;
           border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: #fff;
+          border-top-color: var(--c-surface);
           border-radius: 50%;
           animation: spin 0.7s linear infinite;
         }
 
         .auth-terms {
           font-size: 12px;
-          color: #9ca3af;
+          color: var(--c-text-4);
           text-align: center;
           margin: 0;
           line-height: 1.5;

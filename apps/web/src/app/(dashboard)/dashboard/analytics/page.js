@@ -124,9 +124,9 @@ export default function AnalyticsPage() {
               {goalStatusData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={goalStatusData} barSize={44}>
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#98a2b3' }} axisLine={false} tickLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#98a2b3' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ border: '1px solid #e4e7ec', borderRadius: 8, fontSize: 13 }} cursor={{ fill: '#f8f9fb' }} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--c-text-4)' }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--c-text-4)' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ border: '1px solid var(--c-border)', borderRadius: 8, fontSize: 13 }} cursor={{ fill: 'var(--c-bg)' }} />
                     <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Goals">
                       {goalStatusData.map((entry, i) => (
                         <Cell key={i} fill={STATUS_COLORS[entry.status] || '#94a3b8'} />
@@ -159,7 +159,7 @@ export default function AnalyticsPage() {
                         <Cell key={i} fill={STATUS_COLORS[entry.status] || '#94a3b8'} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ border: '1px solid #e4e7ec', borderRadius: 8, fontSize: 13 }} />
+                    <Tooltip contentStyle={{ border: '1px solid var(--c-border)', borderRadius: 8, fontSize: 13 }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -190,41 +190,41 @@ export default function AnalyticsPage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 24px; }
         .page-header { display: flex; align-items: flex-start; justify-content: space-between; }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
         .btn-export {
           display: flex; align-items: center; gap: 6px; padding: 9px 18px;
-          background: #fff; color: #374151; border: 1px solid #e4e7ec;
+          background: var(--c-surface); color: var(--c-text-2); border: 1px solid var(--c-border);
           border-radius: 9px; font-size: 13.5px; font-weight: 600; cursor: pointer;
           font-family: var(--font-sans); transition: all 0.15s;
         }
-        .btn-export:hover { background: #f8f9fb; border-color: #c7d2fe; color: #4f46e5; }
-        .loading { text-align: center; padding: 60px; color: #98a2b3; font-size: 14px; }
+        .btn-export:hover { background: var(--c-bg); border-color: var(--c-accent-border); color: #4f46e5; }
+        .loading { text-align: center; padding: 60px; color: var(--c-text-4); font-size: 14px; }
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .stat-card {
-          background: #fff; border: 1px solid #e4e7ec; border-radius: 12px;
+          background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px;
           padding: 20px; display: flex; align-items: center; gap: 14px;
         }
         .stat-icon {
           width: 48px; height: 48px; border-radius: 12px;
           display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        .stat-icon--blue { background: #eff6ff; color: #3b82f6; }
-        .stat-icon--green { background: #f0fdf4; color: #12b76a; }
-        .stat-icon--red { background: #fef2f2; color: #f04438; }
-        .stat-icon--purple { background: #eef2ff; color: #4f46e5; }
-        .stat-num { font-size: 28px; font-weight: 700; color: #101828; letter-spacing: -0.5px; }
-        .stat-label { font-size: 12px; color: #98a2b3; font-weight: 500; margin-top: 2px; }
+        .stat-icon--blue { background: var(--c-info-soft); color: #3b82f6; }
+        .stat-icon--green { background: var(--c-success-soft); color: #12b76a; }
+        .stat-icon--red { background: var(--c-danger-soft); color: #f04438; }
+        .stat-icon--purple { background: var(--c-accent-soft); color: #4f46e5; }
+        .stat-num { font-size: 28px; font-weight: 700; color: var(--c-text); letter-spacing: -0.5px; }
+        .stat-label { font-size: 12px; color: var(--c-text-4); font-weight: 500; margin-top: 2px; }
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .chart-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 20px; }
-        .chart-title { font-size: 14px; font-weight: 700; color: #101828; margin: 0 0 16px; }
-        .chart-empty { height: 220px; display: flex; align-items: center; justify-content: center; color: #98a2b3; font-size: 13px; }
+        .chart-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 20px; }
+        .chart-title { font-size: 14px; font-weight: 700; color: var(--c-text); margin: 0 0 16px; }
+        .chart-empty { height: 220px; display: flex; align-items: center; justify-content: center; color: var(--c-text-4); font-size: 13px; }
         .completion-row { display: flex; align-items: center; gap: 24px; }
         .completion-info { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 80px; }
-        .completion-num { font-size: 32px; font-weight: 700; color: #101828; letter-spacing: -1px; }
-        .completion-label { font-size: 12px; color: #98a2b3; white-space: nowrap; }
+        .completion-num { font-size: 32px; font-weight: 700; color: var(--c-text); letter-spacing: -1px; }
+        .completion-label { font-size: 12px; color: var(--c-text-4); white-space: nowrap; }
         .completion-bar-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
-        .completion-bar { flex: 1; height: 12px; background: #f1f3f7; border-radius: 6px; overflow: hidden; }
+        .completion-bar { flex: 1; height: 12px; background: var(--c-surface-2); border-radius: 6px; overflow: hidden; }
         .completion-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 6px; transition: width 0.5s; }
         .completion-pct { font-size: 14px; font-weight: 700; color: #4f46e5; white-space: nowrap; }
         @media (max-width: 1024px) {

@@ -33,7 +33,7 @@ export default function GoalDetailPage() {
   useEffect(() => () => Object.values(progressTimers.current).forEach(clearTimeout), []);
 
   if (!currentGoal || currentGoal.id !== parseInt(id)) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, color: '#98a2b3' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, color: 'var(--c-text-4)' }}>
       {goalError || 'Loading...'}
     </div>
   );
@@ -245,9 +245,9 @@ export default function GoalDetailPage() {
                   <div key={item.id} className="linked-item">
                     {item.status === 'DONE'
                       ? <CheckCircle size={15} style={{ color: '#12b76a' }} />
-                      : <Circle size={15} style={{ color: '#d1d5db' }} />
+                      : <Circle size={15} style={{ color: 'var(--c-text-4)' }} />
                     }
-                    <span className="linked-title" style={{ textDecoration: item.status === 'DONE' ? 'line-through' : 'none', color: item.status === 'DONE' ? '#98a2b3' : '#101828' }}>
+                    <span className="linked-title" style={{ textDecoration: item.status === 'DONE' ? 'line-through' : 'none', color: item.status === 'DONE' ? 'var(--c-text-4)' : 'var(--c-text)' }}>
                       {item.title}
                     </span>
                     {item.assignee && <span className="linked-assignee">{item.assignee.name}</span>}
@@ -283,7 +283,7 @@ export default function GoalDetailPage() {
 
             <div className="activity-list">
               {currentGoal.updates?.length === 0 && (
-                <div style={{ color: '#98a2b3', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ color: 'var(--c-text-4)', fontSize: 13, textAlign: 'center', padding: '16px 0' }}>
                   No updates yet
                 </div>
               )}
@@ -313,7 +313,7 @@ export default function GoalDetailPage() {
         .detail { display: flex; flex-direction: column; gap: 20px; }
         .back-btn {
           display: inline-flex; align-items: center; gap: 6px;
-          font-size: 13px; color: #6b7280; background: none; border: none;
+          font-size: 13px; color: var(--c-text-3); background: none; border: none;
           cursor: pointer; font-family: var(--font-sans); padding: 0;
           transition: color 0.12s;
         }
@@ -321,68 +321,68 @@ export default function GoalDetailPage() {
         .detail-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
         .detail-main { display: flex; flex-direction: column; gap: 16px; }
         .detail-sidebar { position: sticky; top: 80px; }
-        .detail-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 20px; }
+        .detail-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 20px; }
         .detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
         .detail-header-left { min-width: 0; }
-        .detail-title { font-size: 20px; font-weight: 700; color: #101828; margin: 0 0 8px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+        .detail-title { font-size: 20px; font-weight: 700; color: var(--c-text); margin: 0 0 8px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
         .edit-title-btn {
           display: inline-flex; align-items: center; justify-content: center;
-          width: 26px; height: 26px; border: 1px solid #e4e7ec; border-radius: 6px;
-          background: none; cursor: pointer; color: #98a2b3; opacity: 0;
+          width: 26px; height: 26px; border: 1px solid var(--c-border); border-radius: 6px;
+          background: none; cursor: pointer; color: var(--c-text-4); opacity: 0;
           transition: opacity 0.15s, color 0.15s; flex-shrink: 0;
         }
         .detail-title:hover .edit-title-btn { opacity: 1; }
-        .edit-title-btn:hover { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
+        .edit-title-btn:hover { color: #4f46e5; border-color: var(--c-accent-border); background: var(--c-accent-soft); }
         .edit-title-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .edit-title-input {
           flex: 1; height: 36px; padding: 0 12px; font-size: 16px; font-weight: 600;
           border: 1px solid #6366f1; border-radius: 8px; outline: none;
-          font-family: var(--font-sans); color: #101828;
+          font-family: var(--font-sans); color: var(--c-text);
           box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
         .btn-ghost-sm {
-          height: 36px; padding: 0 12px; background: none; border: 1px solid #e4e7ec;
-          border-radius: 8px; font-size: 13px; color: #374151; cursor: pointer;
+          height: 36px; padding: 0 12px; background: none; border: 1px solid var(--c-border);
+          border-radius: 8px; font-size: 13px; color: var(--c-text-2); cursor: pointer;
           font-family: var(--font-sans); white-space: nowrap;
         }
-        .btn-ghost-sm:hover { background: #f8f9fb; }
-        .detail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 13px; color: #6b7280; }
-        .owner-select { font-size: 13px; font-weight: 600; color: #101828; border: 1px solid #e4e7ec; border-radius: 6px; padding: 2px 6px; background: #fff; font-family: var(--font-sans); }
+        .btn-ghost-sm:hover { background: var(--c-bg); }
+        .detail-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; font-size: 13px; color: var(--c-text-3); }
+        .owner-select { font-size: 13px; font-weight: 600; color: var(--c-text); border: 1px solid var(--c-border); border-radius: 6px; padding: 2px 6px; background: var(--c-surface); font-family: var(--font-sans); }
         .detail-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .status-select {
           height: 34px; padding: 0 10px; font-size: 12.5px;
-          border: 1px solid #e4e7ec; border-radius: 8px; background: #f8f9fb;
-          cursor: pointer; color: #374151; font-family: var(--font-sans);
+          border: 1px solid var(--c-border); border-radius: 8px; background: var(--c-bg);
+          cursor: pointer; color: var(--c-text-2); font-family: var(--font-sans);
           outline: none;
         }
         .status-select:focus { border-color: #6366f1; }
         .icon-btn {
           width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-          border: 1px solid #e4e7ec; border-radius: 7px; background: #fff;
-          cursor: pointer; color: #6b7280; transition: all 0.12s;
+          border: 1px solid var(--c-border); border-radius: 7px; background: var(--c-surface);
+          cursor: pointer; color: var(--c-text-3); transition: all 0.12s;
         }
-        .icon-btn:hover { background: #f8f9fb; }
-        .icon-btn--danger:hover { background: #fef2f2; color: #f04438; border-color: #fecaca; }
+        .icon-btn:hover { background: var(--c-bg); }
+        .icon-btn--danger:hover { background: var(--c-danger-soft); color: #f04438; border-color: var(--c-danger-border); }
         .icon-btn--sm { width: 24px; height: 24px; border: none; background: none; }
         .overall-progress { margin-top: 4px; }
         .overall-progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .overall-progress-label { font-size: 13px; color: #6b7280; font-weight: 500; }
+        .overall-progress-label { font-size: 13px; color: var(--c-text-3); font-weight: 500; }
         .overall-progress-pct { font-size: 13px; font-weight: 700; color: #4f46e5; }
-        .progress-bar { height: 8px; background: #f1f3f7; border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 8px; background: var(--c-surface-2); border-radius: 4px; overflow: hidden; }
         .progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 4px; transition: width 0.4s; }
-        .section-title { font-size: 14px; font-weight: 700; color: #101828; margin: 0 0 14px; }
+        .section-title { font-size: 14px; font-weight: 700; color: var(--c-text); margin: 0 0 14px; }
         .milestone-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
         .milestone-item { display: flex; flex-direction: column; gap: 6px; }
         .milestone-header { display: flex; align-items: center; justify-content: space-between; }
-        .milestone-title { font-size: 13.5px; color: #374151; font-weight: 500; }
+        .milestone-title { font-size: 13.5px; color: var(--c-text-2); font-weight: 500; }
         .milestone-controls { display: flex; align-items: center; gap: 6px; }
         .milestone-pct { font-size: 12px; color: #4f46e5; font-weight: 600; }
         .milestone-range { width: 100%; accent-color: #4f46e5; }
         .add-milestone-form { display: flex; gap: 8px; margin-top: 4px; }
         .form-input {
           flex: 1; height: 36px; padding: 0 12px; font-size: 13px;
-          border: 1px solid #e4e7ec; border-radius: 8px; outline: none;
-          font-family: var(--font-sans); color: #101828;
+          border: 1px solid var(--c-border); border-radius: 8px; outline: none;
+          font-family: var(--font-sans); color: var(--c-text);
         }
         .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .btn-sm-primary {
@@ -397,12 +397,12 @@ export default function GoalDetailPage() {
         .linked-list { display: flex; flex-direction: column; gap: 8px; }
         .linked-item { display: flex; align-items: center; gap: 10px; }
         .linked-title { flex: 1; font-size: 13.5px; }
-        .linked-assignee { font-size: 12px; color: #98a2b3; }
+        .linked-assignee { font-size: 12px; color: var(--c-text-4); }
         .update-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
         .update-textarea {
           width: 100%; padding: 10px 12px; font-size: 13px;
-          border: 1px solid #e4e7ec; border-radius: 8px; resize: none;
-          font-family: var(--font-sans); color: #101828; outline: none;
+          border: 1px solid var(--c-border); border-radius: 8px; resize: none;
+          font-family: var(--font-sans); color: var(--c-text); outline: none;
           box-sizing: border-box;
         }
         .update-textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
@@ -415,9 +415,9 @@ export default function GoalDetailPage() {
           overflow: hidden;
         }
         .activity-body { flex: 1; min-width: 0; }
-        .activity-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: #6b7280; }
-        .activity-meta strong { color: #101828; }
-        .activity-content { font-size: 13px; color: #374151; margin: 0; line-height: 1.5; }
+        .activity-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; font-size: 12px; color: var(--c-text-3); }
+        .activity-meta strong { color: var(--c-text); }
+        .activity-content { font-size: 13px; color: var(--c-text-2); margin: 0; line-height: 1.5; }
         @media (max-width: 900px) {
           .detail-layout { grid-template-columns: 1fr; }
           .detail-sidebar { position: static; }

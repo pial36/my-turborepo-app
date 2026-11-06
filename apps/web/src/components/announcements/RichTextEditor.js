@@ -66,14 +66,14 @@ export default function RichTextEditor({ value, onChange, placeholder = 'Write s
       <EditorContent editor={editor} />
 
       <style jsx>{`
-        .rte { border: 1px solid #e4e7ec; border-radius: 10px; background: #fff; overflow: hidden; }
+        .rte { border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-surface); overflow: hidden; }
         .rte:focus-within { border-color: var(--ws-accent, #6366f1); }
-        .rte-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; border-bottom: 1px solid #e4e7ec; background: #f8f9fb; }
-        .rte-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: #667085; cursor: pointer; }
-        .rte-btn:hover:not(:disabled) { background: #f1f3f7; color: #101828; }
+        .rte-toolbar { display: flex; flex-wrap: wrap; gap: 2px; padding: 6px; border-bottom: 1px solid var(--c-border); background: var(--c-bg); }
+        .rte-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: none; background: none; border-radius: 6px; color: var(--c-text-3); cursor: pointer; }
+        .rte-btn:hover:not(:disabled) { background: var(--c-surface-2); color: var(--c-text); }
         .rte-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .rte-btn--active { background: #eef2ff; color: var(--ws-accent, #4f46e5); }
-        .rte-sep { width: 1px; margin: 4px; background: #e4e7ec; }
+        .rte-btn--active { background: var(--c-accent-soft); color: var(--ws-accent, #4f46e5); }
+        .rte-sep { width: 1px; margin: 4px; background: var(--c-surface-3); }
       `}</style>
     </div>
   );

@@ -90,37 +90,37 @@ export default function GoalModal({ onClose, workspaceId }) {
           z-index: 200; backdrop-filter: blur(2px);
         }
         .modal {
-          background: #fff; border-radius: 14px; width: 100%; max-width: 440px;
+          background: var(--c-surface); border-radius: 14px; width: 100%; max-width: 440px;
           box-shadow: 0 20px 48px rgba(16,24,40,0.16); margin: 16px;
         }
         .modal-header {
           display: flex; align-items: center; justify-content: space-between;
           padding: 20px 20px 0;
         }
-        .modal-title { font-size: 16px; font-weight: 700; color: #101828; margin: 0; }
+        .modal-title { font-size: 16px; font-weight: 700; color: var(--c-text); margin: 0; }
         .modal-close {
           width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-          background: none; border: none; cursor: pointer; color: #98a2b3; border-radius: 6px;
+          background: none; border: none; cursor: pointer; color: var(--c-text-4); border-radius: 6px;
           transition: background 0.12s;
         }
-        .modal-close:hover { background: #f1f3f7; color: #374151; }
+        .modal-close:hover { background: var(--c-surface-2); color: var(--c-text-2); }
         .modal-form { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
         .field { display: flex; flex-direction: column; gap: 6px; }
-        .label { font-size: 13px; font-weight: 500; color: #374151; }
+        .label { font-size: 13px; font-weight: 500; color: var(--c-text-2); }
         .input {
           height: 40px; padding: 0 12px; font-size: 13.5px;
-          border: 1px solid #d1d5db; border-radius: 8px; outline: none;
-          font-family: var(--font-sans); color: #101828; background: #fff;
+          border: 1px solid var(--c-border-2); border-radius: 8px; outline: none;
+          font-family: var(--font-sans); color: var(--c-text); background: var(--c-surface);
           transition: border-color 0.15s, box-shadow 0.15s;
         }
         .input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
         .btn-ghost {
-          height: 38px; padding: 0 16px; background: none; border: 1px solid #e4e7ec;
-          border-radius: 8px; font-size: 13px; color: #374151; cursor: pointer;
+          height: 38px; padding: 0 16px; background: none; border: 1px solid var(--c-border);
+          border-radius: 8px; font-size: 13px; color: var(--c-text-2); cursor: pointer;
           font-family: var(--font-sans); transition: background 0.12s;
         }
-        .btn-ghost:hover { background: #f8f9fb; }
+        .btn-ghost:hover { background: var(--c-bg); }
         .btn-primary {
           height: 38px; padding: 0 18px; background: #4f46e5; color: #fff;
           border: none; border-radius: 8px; font-size: 13px; font-weight: 600;

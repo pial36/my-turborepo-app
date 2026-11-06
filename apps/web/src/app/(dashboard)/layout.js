@@ -10,6 +10,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { getSocket } from '@/lib/socket';
 import Sidebar from '@/components/layout/sidebar';
 import Topbar from '@/components/layout/Topbar';
+import CommandPalette from '@/components/layout/CommandPalette';
 
 
 export default function DashboardLayout({ children }) {
@@ -21,6 +22,7 @@ export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [booted, setBooted] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useSocket(currentWorkspace?.id);
 
@@ -40,6 +42,18 @@ export default function DashboardLayout({ children }) {
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
   }, [pathname, isMobile]);
+
+  // ⌘K / Ctrl+K toggles the command palette from anywhere in the dashboard
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Listen for real-time notifications and online members updates
   useEffect(() => {
@@ -84,8 +98,8 @@ export default function DashboardLayout({ children }) {
 
   if (!booted) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8f9fb' }}>
-        <div style={{ width: 32, height: 32, border: '3px solid #e4e7ec', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--c-bg)' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid var(--c-border)', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -101,18 +115,22 @@ export default function DashboardLayout({ children }) {
         <div className="drawer-backdrop" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
       )}
       <div className={`app-main ${sidebarOpen ? 'app-main--sidebar' : ''}`}>
-        <Topbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <Topbar
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          onOpenPalette={() => setPaletteOpen(true)}
+        />
         <main className="app-content">
           {children}
         </main>
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
       <style jsx>{`
         .app-shell {
           display: flex;
           height: 100vh;
           overflow: hidden;
-          background: #f8f9fb;
+          background: var(--c-bg);
         }
         .app-main {
           flex: 1;

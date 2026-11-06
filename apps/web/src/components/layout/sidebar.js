@@ -167,8 +167,8 @@ export default function Sidebar({ open, mobile = false }) {
         .sidebar {
           width: 240px;
           flex-shrink: 0;
-          background: #fff;
-          border-right: 1px solid #e4e7ec;
+          background: var(--c-surface);
+          border-right: 1px solid var(--c-border);
           display: flex;
           flex-direction: column;
           height: 100vh;
@@ -187,7 +187,7 @@ export default function Sidebar({ open, mobile = false }) {
           align-items: center;
           gap: 9px;
           padding: 20px 18px 16px;
-          border-bottom: 1px solid #f1f3f7;
+          border-bottom: 1px solid var(--c-border-soft);
         }
         .sidebar-logo {
           width: 32px;
@@ -204,7 +204,7 @@ export default function Sidebar({ open, mobile = false }) {
         .sidebar-brand-name {
           font-size: 15px;
           font-weight: 700;
-          color: #101828;
+          color: var(--c-text);
           letter-spacing: -0.3px;
         }
 
@@ -219,14 +219,14 @@ export default function Sidebar({ open, mobile = false }) {
           align-items: center;
           gap: 9px;
           padding: 8px 10px;
-          background: #f8f9fb;
-          border: 1px solid #e4e7ec;
+          background: var(--c-bg);
+          border: 1px solid var(--c-border);
           border-radius: 9px;
           cursor: pointer;
           text-align: left;
           transition: background 0.15s;
         }
-        .ws-btn:hover { background: #f1f3f7; }
+        .ws-btn:hover { background: var(--c-surface-2); }
         .ws-avatar {
           width: 28px;
           height: 28px;
@@ -247,7 +247,7 @@ export default function Sidebar({ open, mobile = false }) {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          color: #101828;
+          color: var(--c-text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -255,10 +255,10 @@ export default function Sidebar({ open, mobile = false }) {
         .ws-role {
           display: block;
           font-size: 11px;
-          color: #98a2b3;
+          color: var(--c-text-4);
         }
         .ws-chevron {
-          color: #98a2b3;
+          color: var(--c-text-4);
           transition: transform 0.15s;
           flex-shrink: 0;
         }
@@ -268,8 +268,8 @@ export default function Sidebar({ open, mobile = false }) {
           top: calc(100% - 4px);
           left: 12px;
           right: 12px;
-          background: #fff;
-          border: 1px solid #e4e7ec;
+          background: var(--c-surface);
+          border: 1px solid var(--c-border);
           border-radius: 10px;
           box-shadow: 0 8px 24px rgba(16,24,40,0.12);
           z-index: 50;
@@ -283,7 +283,7 @@ export default function Sidebar({ open, mobile = false }) {
           gap: 8px;
           padding: 8px 10px;
           font-size: 13px;
-          color: #374151;
+          color: var(--c-text-2);
           background: none;
           border: none;
           border-radius: 7px;
@@ -291,9 +291,9 @@ export default function Sidebar({ open, mobile = false }) {
           text-align: left;
           transition: background 0.12s;
         }
-        .ws-item:hover { background: #f8f9fb; }
-        .ws-item--active { background: #eef2ff; color: #4f46e5; font-weight: 500; }
-        .ws-item--new { color: #6b7280; font-size: 12px; }
+        .ws-item:hover { background: var(--c-bg); }
+        .ws-item--active { background: var(--c-accent-soft); color: #4f46e5; font-weight: 500; }
+        .ws-item--new { color: var(--c-text-3); font-size: 12px; }
         .ws-item-dot {
           width: 8px; height: 8px;
           border-radius: 50%;
@@ -309,7 +309,7 @@ export default function Sidebar({ open, mobile = false }) {
           height: 30px;
           padding: 0 8px;
           font-size: 12px;
-          border: 1px solid #d1d5db;
+          border: 1px solid var(--c-border-2);
           border-radius: 6px;
           outline: none;
         }
@@ -337,26 +337,27 @@ export default function Sidebar({ open, mobile = false }) {
         .sidebar-nav-label {
           font-size: 10px;
           font-weight: 600;
-          color: #98a2b3;
+          color: var(--c-text-4);
           text-transform: uppercase;
           letter-spacing: 0.6px;
           padding: 8px 8px 4px;
           display: block;
         }
-        .nav-item {
+        /* next/link renders outside the styled-jsx scope, hence :global */
+        .sidebar-nav :global(.nav-item) {
           display: flex;
           align-items: center;
           gap: 9px;
           padding: 8px 10px;
           font-size: 13.5px;
-          color: #475467;
+          color: var(--c-text-2);
           border-radius: 8px;
           text-decoration: none;
           transition: background 0.12s, color 0.12s;
         }
-        .nav-item:hover { background: #f8f9fb; color: #101828; }
-        .nav-item--active {
-          background: color-mix(in srgb, var(--ws-accent, #4f46e5) 12%, #fff);
+        .sidebar-nav :global(.nav-item:hover) { background: var(--c-bg); color: var(--c-text); }
+        .sidebar-nav :global(.nav-item--active) {
+          background: color-mix(in srgb, var(--ws-accent, #4f46e5) 12%, var(--c-surface));
           color: var(--ws-accent, #4f46e5);
           font-weight: 600;
         }
@@ -364,7 +365,7 @@ export default function Sidebar({ open, mobile = false }) {
         /* Online members */
         .sidebar-online {
           padding: 8px 12px;
-          border-top: 1px solid #f1f3f7;
+          border-top: 1px solid var(--c-border-soft);
         }
         .online-list {
           display: flex;
@@ -382,13 +383,13 @@ export default function Sidebar({ open, mobile = false }) {
           width: 26px;
           height: 26px;
           border-radius: 50%;
-          background: #e4e7ec;
+          background: var(--c-surface-3);
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 10px;
           font-weight: 600;
-          color: #475467;
+          color: var(--c-text-2);
           flex-shrink: 0;
         }
         .online-avatar-img {
@@ -404,13 +405,13 @@ export default function Sidebar({ open, mobile = false }) {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: #d1d5db;
-          border: 1.5px solid #fff;
+          background: var(--c-border-2);
+          border: 1.5px solid var(--c-surface);
         }
         .online-dot--on { background: #12b76a; }
         .online-name {
           font-size: 12.5px;
-          color: #374151;
+          color: var(--c-text-2);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -419,18 +420,18 @@ export default function Sidebar({ open, mobile = false }) {
         /* Bottom */
         .sidebar-bottom {
           padding: 12px;
-          border-top: 1px solid #f1f3f7;
+          border-top: 1px solid var(--c-border-soft);
           display: flex;
           flex-direction: column;
           gap: 2px;
         }
-        .sidebar-bottom-btn {
+        .sidebar :global(.sidebar-bottom-btn) {
           display: flex;
           align-items: center;
           gap: 8px;
           padding: 7px 10px;
           font-size: 13px;
-          color: #475467;
+          color: var(--c-text-2);
           background: none;
           border: none;
           border-radius: 7px;
@@ -439,15 +440,15 @@ export default function Sidebar({ open, mobile = false }) {
           transition: background 0.12s;
           font-family: var(--font-sans);
         }
-        .sidebar-bottom-btn:hover { background: #f8f9fb; }
-        .sidebar-bottom-btn--logout:hover { background: #fef2f2; color: #f04438; }
+        .sidebar :global(.sidebar-bottom-btn:hover) { background: var(--c-bg); }
+        .sidebar :global(.sidebar-bottom-btn--logout:hover) { background: var(--c-danger-soft); color: #f04438; }
         .sidebar-user {
           display: flex;
           align-items: center;
           gap: 9px;
           padding: 10px 10px 4px;
           margin-top: 4px;
-          border-top: 1px solid #f1f3f7;
+          border-top: 1px solid var(--c-border-soft);
         }
         .sidebar-user-avatar {
           width: 30px;
@@ -472,7 +473,7 @@ export default function Sidebar({ open, mobile = false }) {
           display: block;
           font-size: 13px;
           font-weight: 600;
-          color: #101828;
+          color: var(--c-text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -480,7 +481,7 @@ export default function Sidebar({ open, mobile = false }) {
         .sidebar-user-email {
           display: block;
           font-size: 11px;
-          color: #98a2b3;
+          color: var(--c-text-4);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

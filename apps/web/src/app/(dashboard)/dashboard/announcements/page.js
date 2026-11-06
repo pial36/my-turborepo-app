@@ -28,7 +28,7 @@ function RenderContent({ text = '' }) {
     <>
       {parts.map((part, i) =>
         part.startsWith('@')
-          ? <span key={i} style={{ color: '#4f46e5', fontWeight: 600, background: '#eef2ff', padding: '1px 5px', borderRadius: 4 }}>{part}</span>
+          ? <span key={i} style={{ color: '#4f46e5', fontWeight: 600, background: 'var(--c-accent-soft)', padding: '1px 5px', borderRadius: 4 }}>{part}</span>
           : part
       )}
     </>
@@ -98,13 +98,13 @@ function CommentInput({ announcementId, members, onSubmit }) {
             placeholder="Write a comment... type @ to mention"
             style={{
               width: '100%', height: 36, padding: '0 12px', fontSize: 13,
-              border: '1px solid #e4e7ec', borderRadius: 8, outline: 'none',
-              fontFamily: 'var(--font-sans)', color: '#101828', boxSizing: 'border-box',
+              border: '1px solid var(--c-border)', borderRadius: 8, outline: 'none',
+              fontFamily: 'var(--font-sans)', color: 'var(--c-text)', boxSizing: 'border-box',
               transition: 'border-color 0.15s',
             }}
             onFocus={e => e.target.style.borderColor = '#6366f1'}
             onBlur={e => {
-              e.target.style.borderColor = '#e4e7ec';
+              e.target.style.borderColor = 'var(--c-border)';
               // Delay so click on suggestion registers before closing
               setTimeout(() => setMentionOpen(false), 200);
             }}
@@ -114,11 +114,11 @@ function CommentInput({ announcementId, members, onSubmit }) {
           {mentionOpen && suggestions.length > 0 && (
             <div style={{
               position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, right: 0,
-              background: '#fff', border: '1px solid #e4e7ec', borderRadius: 10,
+              background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 10,
               boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 100,
               overflow: 'hidden', padding: 4, maxHeight: 220, overflowY: 'auto',
             }}>
-              <div style={{ padding: '4px 10px 6px', fontSize: 10, fontWeight: 700, color: '#98a2b3', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div style={{ padding: '4px 10px 6px', fontSize: 10, fontWeight: 700, color: 'var(--c-text-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Mention a teammate
               </div>
               {suggestions.map(m => (
@@ -131,7 +131,7 @@ function CommentInput({ announcementId, members, onSubmit }) {
                     border: 'none', borderRadius: 7, cursor: 'pointer', textAlign: 'left',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f1f3f7'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--c-surface-2)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'none'}
                 >
                   {/* Avatar */}
@@ -147,15 +147,15 @@ function CommentInput({ announcementId, members, onSubmit }) {
                   </div>
                   {/* Name + handle */}
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#101828', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text)', lineHeight: 1.3 }}>
                       {m.user?.name}
                     </div>
-                    <div style={{ fontSize: 11, color: '#98a2b3' }}>
+                    <div style={{ fontSize: 11, color: 'var(--c-text-4)' }}>
                       @{toHandle(m.user?.name || '')}
                     </div>
                   </div>
                   {/* Role badge */}
-                  <div style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, color: m.role === 'ADMIN' ? '#4f46e5' : '#6b7280', background: m.role === 'ADMIN' ? '#eef2ff' : '#f1f3f7', padding: '2px 7px', borderRadius: 10 }}>
+                  <div style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, color: m.role === 'ADMIN' ? '#4f46e5' : 'var(--c-text-3)', background: m.role === 'ADMIN' ? 'var(--c-accent-soft)' : 'var(--c-surface-2)', padding: '2px 7px', borderRadius: 10 }}>
                     {m.role}
                   </div>
                 </button>
@@ -167,8 +167,8 @@ function CommentInput({ announcementId, members, onSubmit }) {
           {mentionOpen && suggestions.length === 0 && (
             <div style={{
               position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, right: 0,
-              background: '#fff', border: '1px solid #e4e7ec', borderRadius: 10,
-              padding: '10px 14px', fontSize: 13, color: '#98a2b3',
+              background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: 10,
+              padding: '10px 14px', fontSize: 13, color: 'var(--c-text-4)',
               boxShadow: '0 8px 24px rgba(16,24,40,0.12)', zIndex: 100,
             }}>
               No members found
@@ -194,9 +194,9 @@ function CommentInput({ announcementId, members, onSubmit }) {
       </div>
 
       {/* Hint */}
-      <div style={{ fontSize: 11, color: '#c0c9d8' }}>
-        Type <strong style={{ color: '#98a2b3' }}>@</strong> to see all members · e.g.{' '}
-        <code style={{ background: '#f1f3f7', padding: '1px 5px', borderRadius: 3, fontSize: 11, color: '#4f46e5' }}>
+      <div style={{ fontSize: 11, color: 'var(--c-text-4)' }}>
+        Type <strong style={{ color: 'var(--c-text-4)' }}>@</strong> to see all members · e.g.{' '}
+        <code style={{ background: 'var(--c-surface-2)', padding: '1px 5px', borderRadius: 3, fontSize: 11, color: '#4f46e5' }}>
           @{members[0] ? toHandle(members[0].user?.name || 'RaiyaChowdhury') : 'RaiyaChowdhury'}
         </code>
       </div>
@@ -422,52 +422,52 @@ export default function AnnouncementsPage() {
       <style jsx>{`
         .page { display: flex; flex-direction: column; gap: 24px; }
         .page-header { display: flex; align-items: flex-start; justify-content: space-between; }
-        .page-title { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -0.4px; margin: 0 0 4px; }
-        .page-sub { font-size: 14px; color: #6b7280; margin: 0; }
-        .loading { text-align: center; padding: 40px; color: #98a2b3; font-size: 14px; }
-        .empty-state { text-align: center; padding: 60px; color: #98a2b3; font-size: 14px; }
-        .compose-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-        .compose-textarea { width: 100%; padding: 12px; font-size: 14px; border: 1px solid #e4e7ec; border-radius: 9px; resize: vertical; font-family: var(--font-sans); color: #101828; outline: none; box-sizing: border-box; line-height: 1.5; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--c-text); letter-spacing: -0.4px; margin: 0 0 4px; }
+        .page-sub { font-size: 14px; color: var(--c-text-3); margin: 0; }
+        .loading { text-align: center; padding: 40px; color: var(--c-text-4); font-size: 14px; }
+        .empty-state { text-align: center; padding: 60px; color: var(--c-text-4); font-size: 14px; }
+        .compose-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .compose-textarea { width: 100%; padding: 12px; font-size: 14px; border: 1px solid var(--c-border); border-radius: 9px; resize: vertical; font-family: var(--font-sans); color: var(--c-text); outline: none; box-sizing: border-box; line-height: 1.5; }
         .compose-textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .compose-footer { display: flex; align-items: center; justify-content: space-between; }
-        .compose-hint { font-size: 12px; color: #98a2b3; }
+        .compose-hint { font-size: 12px; color: var(--c-text-4); }
         .btn-primary { display: flex; align-items: center; gap: 6px; padding: 9px 18px; background: #4f46e5; color: #fff; border: none; border-radius: 9px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--font-sans); transition: background 0.15s; }
         .btn-primary:hover:not(:disabled) { background: #4338ca; }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .feed { display: flex; flex-direction: column; gap: 16px; }
-        .ann-card { background: #fff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .ann-card--pinned { border-color: #c7d2fe; background: #fafbff; }
-        .ann-pinned-badge { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font-size: 11px; font-weight: 600; color: #4f46e5; background: #eef2ff; padding: 3px 8px; border-radius: 20px; }
+        .ann-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .ann-card--pinned { border-color: var(--c-accent-border); background: var(--c-hover); }
+        .ann-pinned-badge { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; font-size: 11px; font-weight: 600; color: #4f46e5; background: var(--c-accent-soft); padding: 3px 8px; border-radius: 20px; }
         .ann-header { display: flex; align-items: center; justify-content: space-between; }
         .ann-author { display: flex; align-items: center; gap: 10px; }
         .ann-avatar { width: 36px; height: 36px; border-radius: 50%; background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
-        .ann-author-name { display: block; font-size: 14px; font-weight: 600; color: #101828; }
-        .ann-time { display: block; font-size: 12px; color: #98a2b3; }
+        .ann-author-name { display: block; font-size: 14px; font-weight: 600; color: var(--c-text); }
+        .ann-time { display: block; font-size: 12px; color: var(--c-text-4); }
         .ann-header-actions { display: flex; gap: 6px; }
-        .icon-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid #e4e7ec; border-radius: 7px; cursor: pointer; color: #6b7280; transition: all 0.12s; }
-        .icon-btn:hover { background: #f8f9fb; }
-        .icon-btn--active { background: #eef2ff; color: #4f46e5; border-color: #c7d2fe; }
-        .icon-btn--danger:hover { background: #fef2f2; color: #f04438; border-color: #fecaca; }
-        .ann-content { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+        .icon-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--c-border); border-radius: 7px; cursor: pointer; color: var(--c-text-3); transition: all 0.12s; }
+        .icon-btn:hover { background: var(--c-bg); }
+        .icon-btn--active { background: var(--c-accent-soft); color: #4f46e5; border-color: var(--c-accent-border); }
+        .icon-btn--danger:hover { background: var(--c-danger-soft); color: #f04438; border-color: var(--c-danger-border); }
+        .ann-content { font-size: 14px; color: var(--c-text-2); line-height: 1.6; margin: 0; white-space: pre-wrap; }
         .ann-reactions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .reaction-chip { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: #f8f9fb; border: 1px solid #e4e7ec; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.12s; }
-        .reaction-chip:hover { background: #eef2ff; border-color: #c7d2fe; }
-        .reaction-chip span { font-size: 12px; color: #6b7280; font-weight: 600; }
-        .add-reaction-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid #e4e7ec; border-radius: 50%; cursor: pointer; color: #6b7280; transition: all 0.12s; }
-        .add-reaction-btn:hover { background: #f8f9fb; }
-        .emoji-picker { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 50; background: #fff; border: 1px solid #e4e7ec; border-radius: 10px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 8px 24px rgba(16,24,40,0.12); }
+        .reaction-chip { display: flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.12s; }
+        .reaction-chip:hover { background: var(--c-accent-soft); border-color: var(--c-accent-border); }
+        .reaction-chip span { font-size: 12px; color: var(--c-text-3); font-weight: 600; }
+        .add-reaction-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--c-border); border-radius: 50%; cursor: pointer; color: var(--c-text-3); transition: all 0.12s; }
+        .add-reaction-btn:hover { background: var(--c-bg); }
+        .emoji-picker { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 50; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 8px 24px rgba(16,24,40,0.12); }
         .emoji-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 16px; background: none; border: none; border-radius: 6px; cursor: pointer; }
-        .emoji-btn:hover { background: #f1f3f7; }
-        .comment-toggle-btn { display: flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: 12.5px; color: #6b7280; background: none; border: 1px solid #e4e7ec; border-radius: 20px; cursor: pointer; margin-left: auto; font-family: var(--font-sans); transition: all 0.12s; }
-        .comment-toggle-btn:hover { background: #f8f9fb; color: #4f46e5; border-color: #c7d2fe; }
+        .emoji-btn:hover { background: var(--c-surface-2); }
+        .comment-toggle-btn { display: flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: 12.5px; color: var(--c-text-3); background: none; border: 1px solid var(--c-border); border-radius: 20px; cursor: pointer; margin-left: auto; font-family: var(--font-sans); transition: all 0.12s; }
+        .comment-toggle-btn:hover { background: var(--c-bg); color: #4f46e5; border-color: var(--c-accent-border); }
         .comment-toggle-btn span { font-weight: 600; }
-        .comments-section { border-top: 1px solid #f1f3f7; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .comments-section { border-top: 1px solid var(--c-border-soft); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
         .comment { display: flex; gap: 9px; }
         .comment-avatar { width: 28px; height: 28px; border-radius: 50%; background: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
         .comment-body { flex: 1; }
-        .comment-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; font-size: 12px; color: #6b7280; }
-        .comment-meta strong { color: #101828; }
-        .comment-text { font-size: 13.5px; color: #374151; margin: 0; line-height: 1.5; }
+        .comment-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; font-size: 12px; color: var(--c-text-3); }
+        .comment-meta strong { color: var(--c-text); }
+        .comment-text { font-size: 13.5px; color: var(--c-text-2); margin: 0; line-height: 1.5; }
       `}</style>
     </div>
   );

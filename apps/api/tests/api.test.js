@@ -307,3 +307,34 @@ describe('audit log', () => {
     ).rejects.toThrow(/immutable/)
   })
 })
+
+describe('OpenAPI docs', () => {
+  test('serves Swagger UI at /api/docs', async () => {
+    const res = await request(app).get('/api/docs/')
+    expect(res.status).toBe(200)
+    expect(res.text).toMatch(/swagger-ui/i)
+  })
+
+  test('documents every Express route', () => {
+    const fs = require('fs')
+    const path = require('path')
+    const spec = require('../src/lib/swagger')
+    const mounts = {
+      auth: '/api/auth', workspace: '/api/workspaces', goal: '/api/goals', actionItem: '/api/action-items',
+      announcement: '/api/announcements', analytics: '/api/analytics', notification: '/api/notifications',
+      auditLog: '/api/audit-logs',
+    }
+    const documented = new Set(
+      Object.entries(spec.paths).flatMap(([p, ops]) => Object.keys(ops).map((m) => `${m.toUpperCase()} ${p}`))
+    )
+    const undocumented = []
+    for (const [file, prefix] of Object.entries(mounts)) {
+      const src = fs.readFileSync(path.join(__dirname, `../src/routes/${file}.routes.js`), 'utf8')
+      for (const [, method, route] of src.matchAll(/router\.(get|post|put|delete)\(\s*'([^']+)'/g)) {
+        const key = `${method.toUpperCase()} ${(prefix + (route === '/' ? '' : route)).replace(/:(\w+)/g, '{$1}')}`
+        if (!documented.has(key)) undocumented.push(key)
+      }
+    }
+    expect(undocumented).toEqual([])
+  })
+})

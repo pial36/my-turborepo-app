@@ -2,10 +2,12 @@ import { io } from 'socket.io-client';
 
 let socket = null;
 
-// Auth is the httpOnly accessToken cookie, sent with the handshake via withCredentials
+// Auth is the httpOnly accessToken cookie, sent with the handshake via withCredentials.
+// No URL by default: same origin, proxied to the API by next.config.mjs rewrites.
+// NEXT_PUBLIC_SOCKET_URL connects straight to the API instead (cross-site cookies).
 export const getSocket = () => {
   if (!socket) {
-    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || undefined, {
       withCredentials: true,
       autoConnect: false,
       reconnection: true,

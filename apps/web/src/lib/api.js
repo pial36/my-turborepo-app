@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+  // empty = same origin; next.config.mjs proxies /api/* to the API (first-party
+  // cookies). Set NEXT_PUBLIC_API_URL only to call the API directly.
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",

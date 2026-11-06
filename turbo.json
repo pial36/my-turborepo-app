@@ -6,15 +6,31 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.js"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_SOCKET_URL"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/*.test.js"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "API_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_SOCKET_URL"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
-      "env": ["DATABASE_URL"]
+      "env": [
+        "DATABASE_URL"
+      ]
     },
     "lint": {}
   }
